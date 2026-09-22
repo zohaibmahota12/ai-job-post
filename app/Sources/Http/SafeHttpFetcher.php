@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 
 class SafeHttpFetcher
 {
+    public function __construct(private DnsLookup $dns) {}
+
     /**
      * @return array{body: string, final_url: string, status: int}
      *
@@ -187,22 +189,14 @@ class SafeHttpFetcher
             return false;
         }
 
-        $records = @dns_get_record($host, DNS_A + DNS_AAAA);
+        $ips = $this->dns->resolve($host);
 
-        if ($records === false || $records === []) {
-            $ipv4 = @gethostbyname($host);
-
-            if (! is_string($ipv4) || $ipv4 === $host || filter_var($ipv4, FILTER_VALIDATE_IP, FILTER_FLAG_IPV4) === false) {
-                throw new SourceCollectionException('Source host could not be resolved.');
-            }
-
-            return $this->isBlockedIp($ipv4);
+        if ($ips === []) {
+            throw new SourceCollectionException('Source host could not be resolved.');
         }
 
-        foreach ($records as $record) {
-            $ip = $record['ip'] ?? $record['ipv6'] ?? null;
-
-            if (is_string($ip) && $this->isBlockedIp($ip)) {
+        foreach ($ips as $ip) {
+            if ($this->isBlockedIp($ip)) {
                 return true;
             }
         }

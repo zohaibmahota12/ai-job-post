@@ -2,8 +2,11 @@
 
 namespace Tests\Unit;
 
+use App\Sources\Http\DnsLookup;
 use App\Sources\Http\SafeHttpFetcher;
 use App\Sources\SourceCollectionException;
+use Illuminate\Support\Facades\Http;
+use Tests\Support\PublicAddressDnsLookup;
 use Tests\TestCase;
 
 class SafeHttpFetcherTest extends TestCase
@@ -50,5 +53,51 @@ class SafeHttpFetcherTest extends TestCase
     {
         app(SafeHttpFetcher::class)->assertSafeUrl('https://93.184.216.34/feed.xml');
         $this->assertTrue(true);
+    }
+
+    public function test_rejects_hostname_that_resolves_to_private_address(): void
+    {
+        $this->app->instance(DnsLookup::class, new class implements DnsLookup
+        {
+            public function resolve(string $host): array
+            {
+                return ['127.0.0.1'];
+            }
+        });
+
+        $this->expectException(SourceCollectionException::class);
+        $this->expectExceptionMessage('private or internal network');
+        app(SafeHttpFetcher::class)->assertSafeUrl('https://evil.example/feed.xml');
+    }
+
+    public function test_rejects_unresolvable_hostname(): void
+    {
+        $this->app->instance(DnsLookup::class, new class implements DnsLookup
+        {
+            public function resolve(string $host): array
+            {
+                return [];
+            }
+        });
+
+        $this->expectException(SourceCollectionException::class);
+        $this->expectExceptionMessage('could not be resolved');
+        app(SafeHttpFetcher::class)->assertSafeUrl('https://missing.example/feed.xml');
+    }
+
+    public function test_http_fake_is_reached_when_dns_lookup_is_injected(): void
+    {
+        $this->app->instance(DnsLookup::class, new PublicAddressDnsLookup);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'https://example.com/feed.xml' => Http::response('ok', 200),
+        ]);
+
+        $result = app(SafeHttpFetcher::class)->get('https://example.com/feed.xml');
+
+        $this->assertSame('ok', $result['body']);
+        $this->assertSame(200, $result['status']);
+        Http::assertSentCount(1);
     }
 }

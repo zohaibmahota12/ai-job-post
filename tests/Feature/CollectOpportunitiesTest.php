@@ -6,12 +6,14 @@ use App\Models\Opportunity;
 use App\Models\Source;
 use App\Models\User;
 use App\Sources\CollectionResult;
+use App\Sources\Http\DnsLookup;
 use App\Sources\RawOpportunity;
 use App\Sources\SourceAdapter;
 use App\Sources\SourceManager;
 use Database\Seeders\SourceSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\PublicAddressDnsLookup;
 use Tests\TestCase;
 
 class CollectOpportunitiesTest extends TestCase
@@ -175,6 +177,9 @@ class CollectOpportunitiesTest extends TestCase
 
     public function test_rss_collection_creates_opportunities_and_matches(): void
     {
+        $this->app->instance(DnsLookup::class, new PublicAddressDnsLookup);
+        $this->app->forgetInstance(SourceManager::class);
+
         Http::preventStrayRequests();
         Http::fake([
             'https://example.com/feed.xml' => Http::response(
@@ -200,6 +205,7 @@ class CollectOpportunitiesTest extends TestCase
             'user_id' => $user->id,
         ]);
         $this->assertGreaterThan(0, Opportunity::query()->whereNotNull('canonical_url')->count());
+        Http::assertSentCount(1);
     }
 
     public function test_admin_can_enable_and_disable_a_source(): void

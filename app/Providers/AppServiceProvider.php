@@ -13,6 +13,8 @@ use App\Services\Matching\Criteria\SkillOverlapCriterion;
 use App\Services\Matching\Criteria\WorkplaceCriterion;
 use App\Services\Matching\MatchEvaluator;
 use App\Sources\AgentReachSourceAdapter;
+use App\Sources\Http\DnsLookup;
+use App\Sources\Http\PhpDnsLookup;
 use App\Sources\JsonApiSourceAdapter;
 use App\Sources\RssAtomSourceAdapter;
 use App\Sources\SourceManager;
@@ -30,6 +32,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->singleton(DnsLookup::class, PhpDnsLookup::class);
+
         $this->app->singleton(SourceManager::class, function ($app): SourceManager {
             $manager = new SourceManager;
             $manager->register($app->make(AgentReachSourceAdapter::class));

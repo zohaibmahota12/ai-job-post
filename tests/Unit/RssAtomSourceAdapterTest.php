@@ -3,11 +3,13 @@
 namespace Tests\Unit;
 
 use App\Models\Source;
+use App\Sources\Http\DnsLookup;
 use App\Sources\RssAtomSourceAdapter;
 use App\Sources\SourceCollectionException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
+use Tests\Support\PublicAddressDnsLookup;
 use Tests\TestCase;
 
 class RssAtomSourceAdapterTest extends TestCase
@@ -58,6 +60,8 @@ class RssAtomSourceAdapterTest extends TestCase
 
     public function test_collect_fetches_configured_url_with_http_fake(): void
     {
+        $this->app->instance(DnsLookup::class, new PublicAddressDnsLookup);
+
         Http::preventStrayRequests();
         Http::fake([
             'https://example.com/feed.xml' => Http::response(
@@ -71,10 +75,13 @@ class RssAtomSourceAdapterTest extends TestCase
         $result = app(RssAtomSourceAdapter::class)->collect($source);
 
         $this->assertCount(2, $result->opportunities);
+        Http::assertSentCount(1);
     }
 
     public function test_http_error_is_surfaced(): void
     {
+        $this->app->instance(DnsLookup::class, new PublicAddressDnsLookup);
+
         Http::preventStrayRequests();
         Http::fake([
             'https://example.com/feed.xml' => Http::response('Nope', 503),
@@ -97,6 +104,8 @@ class RssAtomSourceAdapterTest extends TestCase
 
     public function test_timeout_is_surfaced_as_collection_failure(): void
     {
+        $this->app->instance(DnsLookup::class, new PublicAddressDnsLookup);
+
         Http::preventStrayRequests();
         Http::fake([
             'https://example.com/feed.xml' => function () {
