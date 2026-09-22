@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>Atom Jobs</title>
+  <updated>2026-09-22T10:00:00Z</updated>
+  <entry>
+    <title>Atom PHP Developer</title>
+    <id>atom-php-1</id>
+    <link href="https://jobs.example.com/atom/php-1" rel="alternate"/>
+    <published>2026-09-21T09:00:00Z</published>
+    <summary>Remote Atom listing for PHP work.</summary>
+    <author><name>Contoso</name></author>
+  </entry>
+</feed>

@@ -26,6 +26,7 @@ class Opportunity extends Model
         'description',
         'company',
         'source_url',
+        'canonical_url',
         'external_id',
         'location',
         'job_type',

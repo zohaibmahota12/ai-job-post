@@ -16,11 +16,23 @@ class Source extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'key',
         'driver',
+        'type',
         'name',
         'description',
         'is_enabled',
         'config',
+        'last_run_at',
+        'last_success_at',
+        'last_error',
+    ];
+
+    /**
+     * @var list<string>
+     */
+    protected $hidden = [
+        // Adapter config may contain operator-supplied endpoints; never expose secrets if added later.
     ];
 
     /**
@@ -31,7 +43,24 @@ class Source extends Model
         return [
             'is_enabled' => 'boolean',
             'config' => 'array',
+            'last_run_at' => 'datetime',
+            'last_success_at' => 'datetime',
         ];
+    }
+
+    /**
+     * Public-safe config view for admin UI (never includes credential keys).
+     *
+     * @return array<string, mixed>
+     */
+    public function safeConfig(): array
+    {
+        $config = $this->config ?? [];
+        $blocked = ['api_key', 'token', 'secret', 'password', 'authorization', 'auth'];
+
+        return collect($config)
+            ->reject(fn ($value, $key) => in_array(strtolower((string) $key), $blocked, true))
+            ->all();
     }
 
     /**

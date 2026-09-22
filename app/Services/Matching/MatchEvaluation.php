@@ -12,21 +12,26 @@ final class MatchEvaluation
     public function __construct(public array $results) {}
 
     /**
-     * Numeric scoring is a later phase. This foundation reports criterion outcomes only.
+     * Numeric scoring is provided by MatchScorer. Criterion outcomes remain available here.
      */
     public function score(): null
     {
         return null;
     }
 
-    public function outcomeFor(string $key): CriterionOutcome
+    public function resultFor(string $key): ?CriterionResult
     {
         foreach ($this->results as $result) {
             if ($result->key === $key) {
-                return $result->outcome;
+                return $result;
             }
         }
 
-        return CriterionOutcome::Unknown;
+        return null;
+    }
+
+    public function outcomeFor(string $key): CriterionOutcome
+    {
+        return $this->resultFor($key)?->outcome ?? CriterionOutcome::Unknown;
     }
 }

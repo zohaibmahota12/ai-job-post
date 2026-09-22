@@ -24,7 +24,9 @@ class SourceRun extends Model
         'finished_at',
         'items_found',
         'items_created',
+        'items_updated',
         'items_skipped',
+        'items_duplicated',
         'error_message',
         'metadata',
     ];

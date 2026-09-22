@@ -13,6 +13,8 @@ use App\Services\Matching\Criteria\SkillOverlapCriterion;
 use App\Services\Matching\Criteria\WorkplaceCriterion;
 use App\Services\Matching\MatchEvaluator;
 use App\Sources\AgentReachSourceAdapter;
+use App\Sources\JsonApiSourceAdapter;
+use App\Sources\RssAtomSourceAdapter;
 use App\Sources\SourceManager;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -31,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->singleton(SourceManager::class, function ($app): SourceManager {
             $manager = new SourceManager;
             $manager->register($app->make(AgentReachSourceAdapter::class));
+            $manager->register($app->make(RssAtomSourceAdapter::class));
+            $manager->register($app->make(JsonApiSourceAdapter::class));
 
             return $manager;
         });

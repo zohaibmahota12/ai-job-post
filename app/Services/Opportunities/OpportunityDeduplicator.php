@@ -21,6 +21,18 @@ class OpportunityDeduplicator
             }
         }
 
+        $canonical = $this->canonicalUrl($opportunity->sourceUrl);
+
+        if ($canonical !== '') {
+            $byCanonicalUrl = Opportunity::query()
+                ->where('canonical_url', $canonical)
+                ->first();
+
+            if ($byCanonicalUrl !== null) {
+                return $byCanonicalUrl;
+            }
+        }
+
         return Opportunity::query()
             ->where('content_hash', $this->fingerprint($opportunity))
             ->first();
@@ -37,7 +49,7 @@ class OpportunityDeduplicator
         return hash('sha256', $payload);
     }
 
-    private function canonicalUrl(?string $url): string
+    public function canonicalUrl(?string $url): string
     {
         if ($url === null || $url === '') {
             return '';

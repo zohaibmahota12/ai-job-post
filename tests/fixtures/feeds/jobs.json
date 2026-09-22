@@ -1,0 +1,30 @@
+{
+  "jobs": [
+    {
+      "id": "json-1",
+      "title": "Public API Role",
+      "description": "Work on a public JSON job API integration.",
+      "company": "Example Corp",
+      "url": "https://jobs.example.com/json/1",
+      "location": "Remote",
+      "job_type": "contract",
+      "workplace": "remote",
+      "budget_min": "2000",
+      "budget_max": "4000",
+      "currency": "USD",
+      "posted_at": "2026-09-20T08:00:00Z",
+      "skills": ["Laravel", "PHP"]
+    },
+    {
+      "id": "json-2",
+      "title": "Second Role",
+      "description": "Another valid role",
+      "company": "Example Corp",
+      "url": "https://jobs.example.com/json/2"
+    },
+    {
+      "id": "json-3",
+      "description": "No title here"
+    }
+  ]
+}

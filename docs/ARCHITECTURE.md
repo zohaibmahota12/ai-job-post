@@ -7,17 +7,18 @@ Opportunity Hunter is a Laravel 13 application on PHP 8.3. Production is expecte
 ```text
 Browser
   → Laravel HTTP (sessions, CSRF, policies)
-  → Per-user profile, skills, saves, proposals, applications
+    → Per-user profile, skills, saves, proposals, applications
 
 cPanel cron
   → php artisan opportunities:collect
-  → Source adapter
-  → Normalizer
-  → Deduplicator
+  → Source adapter (rss | json_api | …)
+  → Safe HTTP fetch (SSRF-safe)
+  → Parse / normalize / validate
+  → Deduplicate
   → opportunities table
-
-Match checks run when a user opens a listing.
-They do not write a score and they do not apply.
+  → Deterministic match + score per active user
+  → opportunity_matches
+  → Dashboard
 ```
 
 Users share the opportunity catalog. Everything about a person's work — profile, skills, matches, saves, proposals, applications, notifications — is stored with that user's id and is queried or authorized against the signed-in account.
@@ -26,9 +27,9 @@ Users share the opportunity catalog. Everything about a person's work — profil
 
 `users.role` is `user` or `admin`. `users.is_active` lets an admin disable an account. Login rejects a correct password on a disabled account, and later requests from that session are logged out.
 
-A profile row is created with the user. Skills live in `skills` and are attached through `user_skills`. Two accounts can reference the same skill row without sharing any other data. The application does not ship a hardcoded skill list.
+A profile row is created with the user. Skills live in `skills` and are attached through `user_skills`. Two accounts can reference the same skill row without sharing any other data.
 
-Opportunities are not private. Saved rows, proposals, applications, notifications, and match rows are. Controllers load those records and return 404 when the policy says the current user does not own them, so a changed id does not reveal another account's draft.
+Opportunities are not private. Saved rows, proposals, applications, notifications, and match rows are. Controllers load those records and return 404 when the policy says the current user does not own them.
 
 ## Authentication
 
@@ -37,13 +38,13 @@ Framework facilities, not a second auth library:
 - Passwords use Laravel's `hashed` cast (bcrypt)
 - Login, registration, and password-reset posts are rate limited by email and IP
 - Password reset tokens live in `password_reset_tokens`
-- Email verification uses Laravel's signed URL and `users.email_verified_at`. A separate verification-token table would duplicate that mechanism, so it is not created
+- Email verification uses Laravel's signed URL and `users.email_verified_at`
 - Unverified users can open the verification screen and log out. The dashboard and private data require `verified`
 - Sessions are regenerated on login and invalidated on logout
 - CSRF is the default `web` middleware. Blade forms include `@csrf`
 - Mail defaults to the `log` mailer until SMTP is configured
 
-Create an admin with `php artisan user:make-admin {email}` after that person has registered. The seeder does not insert a person.
+Create an admin with `php artisan user:make-admin {email}` after that person has registered.
 
 ## Database
 
@@ -55,78 +56,137 @@ Create an admin with `php artisan user:make-admin {email}` after that person has
 | `user_profiles` | Bio, experience, location, job type, remote preference, budget, currency, keywords |
 | `skills` | Canonical skill name and slug |
 | `user_skills` | User ↔ skill |
-| `sources` | External source registry. `driver` selects an adapter |
-| `source_runs` | One row per collection attempt |
-| `opportunities` | Normalized listing, raw payload, content hash |
+| `sources` | External source registry. `key` is unique. `driver` selects an adapter. `type` is the source family. `config` holds non-secret endpoint settings. `last_run_at` / `last_success_at` / `last_error` summarize health |
+| `source_runs` | One row per collection attempt, with found/created/updated/skipped/duplicated counts |
+| `opportunities` | Normalized listing, raw payload, `canonical_url`, content hash |
 | `opportunity_skills` | Opportunity ↔ skill |
-| `opportunity_matches` | Per-user match row. `score` is nullable until scoring exists |
+| `opportunity_matches` | Per-user match row with numeric `score` and JSON `reasons` breakdown |
 | `saved_opportunities` | Per-user saves |
 | `proposals` | Draft content, status, nullable AI provider/model metadata |
-| `applications` | Manual status: `NEW`, `SAVED`, `PROPOSAL_DRAFT`, `APPLIED`, `INTERVIEW`, `HIRED`, `REJECTED` |
+| `applications` | Manual status tracking |
 | `notifications` | Per-user in-app notices |
 | `system_errors` | Failures an admin can read without shell access to log files |
 
-Foreign keys cascade when the parent user, skill, or opportunity is removed. Deleting a source nulls `opportunities.source_id` so listings are not destroyed with a connector. Deleting a proposal nulls `applications.proposal_id`.
+Compensation uses `budget_min` / `budget_max` / `currency` for both project budgets and salary-like ranges. Separate salary columns are not required for Phase 2.
 
-`opportunities.content_hash` is unique. `(source_id, external_id)` is unique so a repeated external id from the same source collapses. Cross-source duplicates use the hash of normalized title, company, and canonical URL, ignoring `www` and query strings.
+`opportunities.content_hash` is unique. `(source_id, external_id)` is unique. `canonical_url` is indexed for URL-based deduplication.
 
-## Opportunity pipeline
+## Source adapter architecture
+
+`SourceAdapter` requires:
+
+- `driver()` — registry key (`rss`, `json_api`, `agent_reach`)
+- `type()` — source family
+- `collect(Source)` — fetch, parse, return `CollectionResult` of `RawOpportunity`
+
+Registered adapters:
+
+| Driver | Status |
+| --- | --- |
+| `rss` | Implemented. Public RSS 2.0 / Atom via `SafeHttpFetcher` |
+| `json_api` | Implemented as a configuration-driven template. No commercial provider is claimed as supported until an operator configures a permitted public endpoint and tests it |
+| `agent_reach` | Refuses to collect. Optional boundary only. See [AGENT_REACH.md](AGENT_REACH.md) |
+
+Source-specific parsing stays inside the adapter. The collector never depends on Agent Reach.
+
+`SafeHttpFetcher` validates `http`/`https` URLs, blocks credentials in URLs, blocks localhost/private/link-local/metadata ranges, resolves DNS and rejects private answers, enforces connect/response timeouts, caps response size, and follows a limited number of redirects with re-validation on each hop.
+
+## Collection lifecycle
 
 ```text
-SourceAdapter::collect()
-  → RawOpportunity
-  → OpportunityNormalizer
-  → OpportunityDeduplicator
-  → opportunities + opportunity_skills
+opportunities:collect
+  → for each matching source (by key or driver filter)
+      → create source_run (running)
+      → skip if disabled
+      → adapter.collect()
+      → normalize each RawOpportunity
+      → deduplicate
+      → create or update Opportunity + skills
+      → sync matches for touched opportunities against active verified users
+      → finish source_run + update source last_* fields
+  → continue after individual source failures
 ```
 
-`AgentReachSourceAdapter` is the only production adapter. It refuses to collect. Tests register a fixture adapter to prove the pipeline stores one row and skips the duplicate on the next run.
+Repeated runs do not create duplicate opportunities. Exit code is non-zero when any source fails.
 
-`php artisan opportunities:collect` always writes a `source_runs` row. Disabled sources are `skipped`. A thrown adapter error is `failed` and also stored in `system_errors`. The command's exit code is non-zero when any source fails, which cPanel can email. The command does not call the matcher.
+### Deduplication order
 
-The daily schedule in `routes/console.php` is gated by `OPPORTUNITY_SCHEDULE_COLLECTION` and uses `withoutOverlapping`. The flag defaults to false.
+1. Same `source_id` + `external_id`
+2. Same `canonical_url` (host + path, lowercased, `www.` stripped, query string ignored)
+3. Same `content_hash` fingerprint of normalized title + company + canonical URL
 
-## Matching
+### Matching and scoring
 
-`MatchEvaluator` runs seven deterministic checks:
+The seven Phase 1 deterministic checks remain:
 
-- skill overlap
-- preferred and excluded keywords
-- job type
-- workplace
-- location
-- budget, only when the currency matches
-- years of experience against `required_experience_years`
+- skills, keywords, job type, workplace, location, budget (same currency only), experience
 
-Each check returns pass, fail, or unknown. `MatchEvaluation::score()` returns null. The opportunity page shows the notes. The dashboard's high-match list reads stored scores and stays empty until a later phase writes them.
+`MatchScorer` turns those outcomes into an explainable score using weights from `config/opportunity.php`:
+
+| Factor | Weight |
+| --- | --- |
+| skills | 30 (proportional to overlap vs opportunity skills) |
+| keywords | 20 (proportional to preferred keyword hits; excluded keyword → 0 / fail) |
+| experience | 15 |
+| job type | 10 |
+| workplace | 10 |
+| location | 5 |
+| budget | 10 |
+
+Unknown factors earn 0 points and stay labeled `unknown`. Scores persist on `opportunity_matches` (unique per user/opportunity). Recalculation happens:
+
+- after collection for touched opportunities (all active verified users)
+- after profile or skill changes (that user vs open opportunities)
+- when a user opens an opportunity detail page (that pair)
 
 ## Security
 
-- Eloquent and query-builder bindings for SQL
-- Blade `{{ }}` for HTML
-- Listing links are rendered only for `http` and `https` URLs
-- Validation is in form requests. Controllers persist `validated()` fields, not the raw request
+- Eloquent / query-builder bindings for SQL
+- Blade `{{ }}` for HTML (descriptions are plain text, not raw HTML)
+- Listing links only for `http` / `https`
+- SSRF protections on source fetching
+- Validation in form requests; controllers persist `validated()` fields
 - `role` and `is_active` are not mass assignable
 - Proposal AI columns are not mass assignable
-- Admin routes use an `admin` middleware check on the session user
-- An admin cannot disable their own row from the user list
+- Admin routes use `admin` middleware
+- Source config never displays keys named like `api_key`, `token`, `secret`, `password`, `authorization`, or `auth`
+- Do not store secrets in `sources.config`
 
-## Shared hosting
+## Shared hosting / cPanel cron
 
 - Document root: `public/`
-- PHP 8.3
+- PHP 8.3+
 - MySQL via `DB_CONNECTION=mysql`
-- `QUEUE_CONNECTION=sync` so work finishes inside the cron process
-- `CACHE_STORE=database` and `SESSION_DRIVER=database` avoid Redis
-- Cron: `php /home/USER/opportunity-hunter/artisan opportunities:collect`
-- Compiled CSS is produced with `npm run build` before upload if the host has no Node.js
+- `QUEUE_CONNECTION=sync`
+- `CACHE_STORE=database` and `SESSION_DRIVER=database`
+- Collection is **not** scheduled unless `OPPORTUNITY_SCHEDULE_COLLECTION=true`
 
-## Extension points
+Recommended cPanel cron (direct artisan call):
 
-- Add a class that implements `App\Sources\SourceAdapter` and register it on `SourceManager`
-- Insert a `sources` row whose `driver` matches that class
-- Add a `MatchCriterion` and include it in the `MatchEvaluator` binding
-- Persist evaluations into `opportunity_matches` when scoring starts
-- Fill `proposals.ai_provider`, `ai_model`, and `ai_metadata` only when a generator exists, and still require the user to send the proposal
+```bash
+0 6 * * * /usr/bin/php /home/USER/opportunity-hunter/artisan opportunities:collect >/dev/null 2>&1
+```
+
+Or via the scheduler (only if the schedule flag is enabled):
+
+```bash
+* * * * * /usr/bin/php /home/USER/opportunity-hunter/artisan schedule:run >/dev/null 2>&1
+```
+
+Do not introduce Redis, Supervisor, Horizon, Docker, Kubernetes, systemd, or persistent workers for collection.
+
+## Intended user workflow
+
+View opportunity → review score breakdown → open original source URL → apply manually → record application status in Opportunity Hunter.
+
+There is no auto-apply button and no client email outreach in this phase.
+
+## Known limitations
+
+- HTML career-page scraping is not implemented
+- No commercial JSON job board is bundled as a verified provider
+- Agent Reach is not invoked
+- Matching all users after collection is synchronous; fine for small SaaS on shared hosting, not a background worker architecture
+- Descriptions are escaped plain text; rich HTML from feeds is stripped at parse time
 
 See [Agent Reach findings](AGENT_REACH.md) and [Roadmap](ROADMAP.md).

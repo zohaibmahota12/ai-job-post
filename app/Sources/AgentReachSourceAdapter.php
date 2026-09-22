@@ -5,11 +5,19 @@ namespace App\Sources;
 use App\Models\Source;
 
 /**
- * Placeholder for Phase 2. This class does not call Agent Reach and does not invent listings.
+ * Optional external integration placeholder. Not part of the core collection pipeline.
+ *
+ * Agent Reach is not a generic jobs API and may require local/browser infrastructure
+ * incompatible with shared hosting. See docs/AGENT_REACH.md.
  */
 class AgentReachSourceAdapter implements SourceAdapter
 {
     public function driver(): string
+    {
+        return 'agent_reach';
+    }
+
+    public function type(): string
     {
         return 'agent_reach';
     }

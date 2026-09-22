@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Http\Requests\UpdateProfileRequest;
 use App\JobType;
 use App\RemotePreference;
+use App\Services\Matching\MatchSynchronizer;
 use App\Support\KeywordList;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -33,7 +34,7 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(UpdateProfileRequest $request): RedirectResponse
+    public function update(UpdateProfileRequest $request, MatchSynchronizer $matches): RedirectResponse
     {
         $user = $request->user();
         abort_unless($user !== null, 403);
@@ -55,6 +56,8 @@ class ProfileController extends Controller
             'keywords' => KeywordList::parse($request->input('keywords')),
             'excluded_keywords' => KeywordList::parse($request->input('excluded_keywords')),
         ])->save();
+
+        $matches->syncUserAgainstOpenOpportunities($user->fresh(['skills', 'profile']));
 
         return redirect()->route('profile.edit')->with('status', 'Profile saved.');
     }

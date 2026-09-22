@@ -15,6 +15,8 @@ use Throwable;
 
 class OpportunityNormalizer
 {
+    public function __construct(private OpportunityDeduplicator $deduplicator) {}
+
     public function normalize(RawOpportunity $raw, Source $source): NormalizedOpportunity
     {
         $title = trim(preg_replace('/\s+/u', ' ', $raw->title) ?? '');
@@ -24,13 +26,15 @@ class OpportunityNormalizer
         }
 
         [$budgetMin, $budgetMax] = $this->budgets($raw->budgetMin, $raw->budgetMax);
+        $sourceUrl = $this->url($raw->sourceUrl);
 
         return new NormalizedOpportunity(
             sourceId: $source->id,
             title: $title,
             description: $this->nullableText($raw->description),
             company: $this->nullableText($raw->company),
-            sourceUrl: $this->url($raw->sourceUrl),
+            sourceUrl: $sourceUrl,
+            canonicalUrl: $this->deduplicator->canonicalUrl($sourceUrl),
             externalId: $this->limited($raw->externalId, 191),
             location: $this->limited($raw->location, 255),
             jobType: $this->jobType($raw->jobType),

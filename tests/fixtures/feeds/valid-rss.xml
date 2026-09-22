@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Example Jobs</title>
+    <link>https://jobs.example.com</link>
+    <description>Public job feed</description>
+    <item>
+      <title>Senior Laravel Engineer</title>
+      <link>https://jobs.example.com/jobs/laravel-1</link>
+      <guid>rss-laravel-1</guid>
+      <pubDate>Mon, 22 Sep 2026 10:00:00 GMT</pubDate>
+      <description>Build APIs with Laravel. Remote full-time role.</description>
+      <author>Northwind</author>
+    </item>
+    <item>
+      <title></title>
+      <link>https://jobs.example.com/jobs/empty</link>
+      <description>Malformed empty title should be skipped.</description>
+    </item>
+    <item>
+      <title>Contract React Native Gig</title>
+      <link>https://jobs.example.com/jobs/rn-2?utm_source=feed</link>
+      <guid>rss-rn-2</guid>
+      <pubDate>Tue, 23 Sep 2026 12:00:00 GMT</pubDate>
+      <description>Freelance contract mobile work. Hybrid optional.</description>
+    </item>
+  </channel>
+</rss>

@@ -17,6 +17,9 @@ class DashboardController extends Controller
     public function __invoke(Request $request): View
     {
         $user = $request->user();
+        abort_unless($user !== null, 403);
+
+        $minimumScore = (int) config('opportunity.scoring.dashboard_minimum', 50);
 
         return view('dashboard', [
             'counts' => [
@@ -24,6 +27,7 @@ class DashboardController extends Controller
                 'matches' => OpportunityMatch::query()
                     ->where('user_id', $user->id)
                     ->whereNotNull('score')
+                    ->where('score', '>=', $minimumScore)
                     ->count(),
                 'saved' => SavedOpportunity::query()->where('user_id', $user->id)->count(),
                 'proposals' => Proposal::query()->where('user_id', $user->id)->count(),
@@ -41,12 +45,13 @@ class DashboardController extends Controller
                 ->limit(5)
                 ->get(),
             'matches' => OpportunityMatch::query()
-                ->with('opportunity')
+                ->with(['opportunity.source'])
                 ->where('user_id', $user->id)
                 ->whereNotNull('score')
+                ->where('score', '>=', $minimumScore)
                 ->orderByDesc('score')
                 ->orderByDesc('id')
-                ->limit(5)
+                ->limit(8)
                 ->get(),
             'saved' => SavedOpportunity::query()
                 ->with('opportunity')
@@ -71,6 +76,7 @@ class DashboardController extends Controller
                 ->orderByDesc('id')
                 ->limit(5)
                 ->get(),
+            'minimumScore' => $minimumScore,
         ]);
     }
 }

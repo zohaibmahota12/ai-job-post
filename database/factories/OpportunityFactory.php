@@ -27,6 +27,7 @@ class OpportunityFactory extends Factory
             'description' => fake()->paragraph(),
             'company' => fake()->company(),
             'source_url' => fake()->url(),
+            'canonical_url' => null,
             'external_id' => fake()->unique()->uuid(),
             'location' => fake()->city(),
             'job_type' => JobType::Freelance,

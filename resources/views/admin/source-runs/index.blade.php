@@ -12,7 +12,9 @@
                     <th class="px-4 py-3 font-medium">Status</th>
                     <th class="px-4 py-3 font-medium">Found</th>
                     <th class="px-4 py-3 font-medium">Created</th>
+                    <th class="px-4 py-3 font-medium">Updated</th>
                     <th class="px-4 py-3 font-medium">Skipped</th>
+                    <th class="px-4 py-3 font-medium">Duplicates</th>
                     <th class="px-4 py-3 font-medium">Message</th>
                 </tr>
             </thead>
@@ -23,11 +25,13 @@
                         <td class="px-4 py-3">{{ $run->status->label() }}</td>
                         <td class="px-4 py-3">{{ $run->items_found }}</td>
                         <td class="px-4 py-3">{{ $run->items_created }}</td>
+                        <td class="px-4 py-3">{{ $run->items_updated }}</td>
                         <td class="px-4 py-3">{{ $run->items_skipped }}</td>
+                        <td class="px-4 py-3">{{ $run->items_duplicated }}</td>
                         <td class="px-4 py-3">{{ $run->error_message }}</td>
                     </tr>
                 @empty
-                    <tr><td class="px-4 py-6 text-bark" colspan="6">No collection runs yet.</td></tr>
+                    <tr><td class="px-4 py-6 text-bark" colspan="8">No collection runs yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

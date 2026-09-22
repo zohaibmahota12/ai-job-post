@@ -4,13 +4,24 @@
 
 @section('content')
     <p class="text-sm text-bark">{{ $opportunity->source?->name ?? 'Unknown source' }}</p>
-    <h1 class="mt-1 font-serif text-3xl text-pine">{{ $opportunity->title }}</h1>
-    <p class="mt-2 text-bark">{{ $opportunity->company ?: 'Client not listed' }}</p>
+    <div class="mt-1 flex flex-wrap items-start justify-between gap-4">
+        <div>
+            <h1 class="font-serif text-3xl text-pine">{{ $opportunity->title }}</h1>
+            <p class="mt-2 text-bark">{{ $opportunity->company ?: 'Client not listed' }}</p>
+        </div>
+        <div class="rounded-xl border border-line bg-card px-4 py-3 text-center">
+            <p class="text-sm text-bark">Match score</p>
+            <p class="font-serif text-3xl text-pine">{{ $scored->score }}</p>
+        </div>
+    </div>
     <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
         <div><dt class="text-bark">Job type</dt><dd>{{ $opportunity->job_type?->label() ?? 'Unknown' }}</dd></div>
         <div><dt class="text-bark">Workplace</dt><dd>{{ $opportunity->workplace?->label() ?? 'Unknown' }}</dd></div>
         <div><dt class="text-bark">Location</dt><dd>{{ $opportunity->location ?: 'Not listed' }}</dd></div>
-        <div><dt class="text-bark">Budget</dt><dd>{{ $opportunity->budget_min || $opportunity->budget_max ? trim($opportunity->budget_min.'–'.$opportunity->budget_max.' '.$opportunity->currency) : 'Not listed' }}</dd></div>
+        <div><dt class="text-bark">Budget / salary</dt><dd>{{ $opportunity->budget_min || $opportunity->budget_max ? trim(($opportunity->budget_min ?? '').'–'.($opportunity->budget_max ?? '').' '.($opportunity->currency ?? '')) : 'Not listed' }}</dd></div>
+        <div><dt class="text-bark">Posted</dt><dd>{{ $opportunity->posted_at?->toDayDateTimeString() ?? 'Not listed' }}</dd></div>
+        <div><dt class="text-bark">Deadline</dt><dd>{{ $opportunity->deadline_at?->toDayDateTimeString() ?? 'Not listed' }}</dd></div>
+        <div><dt class="text-bark">Application status</dt><dd>{{ $application?->status->label() ?? 'Not tracking yet' }}</dd></div>
     </dl>
     @if ($opportunity->skills->isNotEmpty())
         <ul class="mt-4 flex flex-wrap gap-2">
@@ -24,6 +35,7 @@
     @endif
     @if ($url = $opportunity->safeSourceUrl())
         <p class="mt-4"><a class="text-sm underline" href="{{ $url }}" rel="noopener noreferrer" target="_blank">Open original listing</a></p>
+        <p class="mt-1 text-sm text-bark">Apply on the original source. Opportunity Hunter does not auto-apply.</p>
     @endif
 
     <div class="mt-6 flex flex-wrap gap-3">
@@ -52,14 +64,16 @@
     </div>
 
     <section class="mt-8">
-        <h2 class="font-serif text-2xl text-pine">Fit notes</h2>
-        <p class="mt-1 text-sm text-bark">These checks compare this listing with your profile. They are not a score.</p>
+        <h2 class="font-serif text-2xl text-pine">Match breakdown</h2>
+        <p class="mt-1 text-sm text-bark">Deterministic score from your profile. Unknown factors earn 0 points and stay labeled unknown.</p>
         <ul class="mt-4 space-y-2">
-            @foreach ($evaluation->results as $result)
+            @foreach ($scored->factors as $factor)
                 <li class="rounded-lg border border-line bg-card px-4 py-3 text-sm">
-                    <span class="font-medium">{{ $result->label }}</span>
-                    <span class="text-bark"> · {{ $result->outcome->label() }}</span>
-                    <p class="mt-1 text-bark">{{ $result->detail }}</p>
+                    <div class="flex items-center justify-between gap-3">
+                        <span class="font-medium">{{ str_replace('_', ' ', ucfirst($factor->key)) }}</span>
+                        <span>{{ $factor->score }}/{{ $factor->max }} · {{ $factor->status->label() }}</span>
+                    </div>
+                    <p class="mt-1 text-bark">{{ $factor->reason }}</p>
                 </li>
             @endforeach
         </ul>

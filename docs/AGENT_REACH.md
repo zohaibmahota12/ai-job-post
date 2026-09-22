@@ -97,12 +97,16 @@ LinkedIn full profile and job search is documented as an optional MCP server (`m
 
 ## Integration choice for this app
 
-Agent Reach is the internet-access layer, but it is not an opportunity API. Phase 2 should:
+Agent Reach is an optional external integration layer, not the required source of truth for opportunity collection.
 
-1. Run `agent-reach doctor --json` only as a health check, and only where Python is actually installed.
-2. Add one adapter per verified upstream that can return public listing data without impersonating the user.
-3. Prefer channels that are a single command and exit, such as RSS or a public HTTP read, over channels that need a desktop browser.
-4. Keep Boss直聘 and other logged-in browser channels off shared hosting. They need a local Chrome profile and must not be automated into an apply flow.
-5. Normalize whatever text comes back into `RawOpportunity`. Do not pretend the CLI already returns this app's schema.
+Phase 2 conclusion:
 
-`App\Sources\AgentReachSourceAdapter` throws `SourceCollectionException` on purpose. The seeded `agent_reach` source is disabled. Enabling it and running `php artisan opportunities:collect` records a failed run and writes a system error. It does not invent listings.
+1. Core collection uses first-party adapters (`rss`, `json_api`) over public HTTP endpoints compatible with Laravel + MySQL + Apache + cPanel cron.
+2. Agent Reach is **not** integrated into `opportunities:collect`.
+3. `App\Sources\AgentReachSourceAdapter` still throws `SourceCollectionException` on purpose.
+4. The seeded `agent_reach` source stays disabled.
+5. Do not invent Agent Reach HTTP endpoints or ship a fake API client.
+6. Channels that need a desktop browser, Chrome debugging port, cookies from a logged-in profile, or persistent local processes remain incompatible with typical shared hosting.
+
+If a future phase revisits Agent Reach, it should stay behind an optional adapter boundary and only call verified upstream tools that return public listing text without impersonating the user or submitting applications.
+

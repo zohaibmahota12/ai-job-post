@@ -8,7 +8,7 @@ use Illuminate\Console\Attributes\Description;
 use Illuminate\Console\Attributes\Signature;
 use Illuminate\Console\Command;
 
-#[Signature('opportunities:collect {--source= : Limit collection to one source driver}')]
+#[Signature('opportunities:collect {--source= : Limit collection to one source key or driver}')]
 #[Description('Collect opportunities from enabled sources')]
 class CollectOpportunities extends Command
 {
@@ -39,6 +39,17 @@ class CollectOpportunities extends Command
                 $this->error($line.($run->error_message ? ' — '.$run->error_message : ''));
 
                 continue;
+            }
+
+            if ($run->status === SourceRunStatus::Succeeded) {
+                $line .= sprintf(
+                    ' (found %d, created %d, updated %d, skipped %d, duplicates %d)',
+                    $run->items_found,
+                    $run->items_created,
+                    $run->items_updated,
+                    $run->items_skipped,
+                    $run->items_duplicated,
+                );
             }
 
             $this->line($line);

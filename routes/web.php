@@ -77,6 +77,7 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
         Route::patch('/users/{user}', [AdminUserController::class, 'update'])->name('users.update');
         Route::get('/sources', [AdminSourceController::class, 'index'])->name('sources.index');
+        Route::patch('/sources/{source}', [AdminSourceController::class, 'update'])->name('sources.update');
         Route::get('/source-runs', [AdminSourceRunController::class, 'index'])->name('source-runs.index');
         Route::get('/errors', [AdminSystemErrorController::class, 'index'])->name('errors.index');
     });
