@@ -1,0 +1,35 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::create('opportunity_matches', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('user_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('opportunity_id')->constrained()->cascadeOnDelete();
+            $table->decimal('score', 5, 2)->nullable();
+            $table->json('reasons')->nullable();
+            $table->timestamp('matched_at')->nullable();
+            $table->timestamps();
+
+            $table->unique(['user_id', 'opportunity_id']);
+            $table->index(['user_id', 'score']);
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::dropIfExists('opportunity_matches');
+    }
+};
