@@ -9,6 +9,7 @@ use App\Models\Proposal;
 use App\Models\SavedOpportunity;
 use App\Models\Source;
 use App\OpportunityStatus;
+use App\Services\Ai\AiManager;
 use App\Services\Matching\MatchEvaluator;
 use App\Services\Matching\MatchScorer;
 use App\Services\Matching\MatchSynchronizer;
@@ -118,6 +119,7 @@ class OpportunityController extends Controller
                 ->where('user_id', $user->id)
                 ->where('opportunity_id', $opportunity->id)
                 ->first(),
+            'aiEnabled' => app(AiManager::class)->enabled(),
         ]);
     }
 }

@@ -79,5 +79,11 @@ class AppServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($email.'|'.$request->ip());
         });
+
+        RateLimiter::for('proposal-generation', function (Request $request) {
+            $perMinute = max(1, (int) config('ai.rate_limit_per_minute', 5));
+
+            return Limit::perMinute($perMinute)->by((string) ($request->user()?->id ?? $request->ip()));
+        });
     }
 }

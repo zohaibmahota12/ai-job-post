@@ -4,6 +4,9 @@
 
 @section('content')
     <h1 class="font-serif text-3xl text-pine">New proposal draft</h1>
+    @unless ($aiEnabled)
+        <p class="mt-4 rounded-md border border-line bg-sand/60 px-3 py-2 text-sm text-bark">AI proposal generation is currently unavailable. You can still create and edit a proposal manually.</p>
+    @endunless
     <form method="POST" action="{{ route('proposals.store') }}" class="mt-6 max-w-3xl space-y-4">
         @csrf
         <div>
@@ -26,7 +29,14 @@
                 @endforeach
             </select>
         </div>
+        <x-field label="Subject" name="subject" value="{{ old('subject') }}" />
         <x-field label="Draft" name="content" type="textarea">{{ old('content') }}</x-field>
         <x-button>Save draft</x-button>
     </form>
+    @if ($aiEnabled && $opportunity)
+        <form method="POST" action="{{ route('opportunities.proposals.generate', $opportunity) }}" class="mt-4">
+            @csrf
+            <x-button variant="secondary">Generate with AI instead</x-button>
+        </form>
+    @endif
 @endsection

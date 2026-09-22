@@ -26,6 +26,9 @@ class ApplicationFactory extends Factory
             'proposal_id' => null,
             'status' => ApplicationStatus::New,
             'notes' => null,
+            'contact_name' => null,
+            'follow_up_at' => null,
+            'external_url' => null,
             'applied_at' => null,
         ];
     }

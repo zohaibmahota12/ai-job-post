@@ -23,8 +23,10 @@ class ProposalFactory extends Factory
         return [
             'user_id' => User::factory(),
             'opportunity_id' => Opportunity::factory(),
+            'subject' => null,
             'content' => fake()->paragraph(),
             'status' => ProposalStatus::Draft,
+            'generated_by_ai' => false,
         ];
     }
 }

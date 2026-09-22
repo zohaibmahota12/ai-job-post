@@ -62,8 +62,10 @@ Create an admin with `php artisan user:make-admin {email}` after that person has
 | `opportunity_skills` | Opportunity ↔ skill |
 | `opportunity_matches` | Per-user match row with numeric `score` and JSON `reasons` breakdown |
 | `saved_opportunities` | Per-user saves |
-| `proposals` | Draft content, status, nullable AI provider/model metadata |
-| `applications` | Manual status tracking |
+| `proposals` | Draft content, subject, status, nullable AI provider/model metadata, `generated_by_ai` |
+| `proposal_versions` | Lightweight proposal history (`ai` / `user` / `regenerate`) |
+| `applications` | Manual status tracking plus optional contact/follow-up/external URL |
+| `application_status_histories` | Status transition history per application |
 | `notifications` | Per-user in-app notices |
 | `system_errors` | Failures an admin can read without shell access to log files |
 
@@ -177,9 +179,11 @@ Do not introduce Redis, Supervisor, Horizon, Docker, Kubernetes, systemd, or per
 
 ## Intended user workflow
 
-View opportunity → review score breakdown → open original source URL → apply manually → record application status in Opportunity Hunter.
+View opportunity → review score breakdown → optional AI or manual proposal draft → review/edit → mark ready → open original source URL → apply manually → record application status → receive in-app notifications.
 
-There is no auto-apply button and no client email outreach in this phase.
+There is no auto-apply button and no client email outreach. Opportunity Hunter does not automatically submit applications.
+
+Optional AI configuration lives in `config/ai.php` / `AI_*` environment variables. See [PHASE_3.md](PHASE_3.md).
 
 ## Known limitations
 
@@ -188,5 +192,6 @@ There is no auto-apply button and no client email outreach in this phase.
 - Agent Reach is not invoked
 - Matching all users after collection is synchronous; fine for small SaaS on shared hosting, not a background worker architecture
 - Descriptions are escaped plain text; rich HTML from feeds is stripped at parse time
+- AI proposal generation depends on an external provider when enabled; the app stays usable when AI is disabled
 
-See [Agent Reach findings](AGENT_REACH.md) and [Roadmap](ROADMAP.md).
+See [Agent Reach findings](AGENT_REACH.md), [Phase 3](PHASE_3.md), and [Roadmap](ROADMAP.md).

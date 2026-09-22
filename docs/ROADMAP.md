@@ -17,7 +17,7 @@ Implemented.
 Implemented in this repository.
 
 - Real RSS/Atom adapter with SSRF-safe HTTP fetching and fixture-based tests
-- Generic public JSON API adapter template (no fake commercial provider claimed)
+- Generic public JSON API adapter template (no commercial provider claimed as verified)
 - Collection lifecycle: fetch → parse → normalize → validate → deduplicate → store/update → match → score
 - Deterministic explainable match scores persisted on `opportunity_matches`
 - Dashboard high-match list, opportunity filters, and detail breakdown
@@ -25,20 +25,25 @@ Implemented in this repository.
 - Agent Reach remains optional and outside the core pipeline
 - cPanel cron documentation; schedule flag still defaults to off
 
-## Phase 3 — AI proposal generation
+## Phase 3 — AI proposal generation, application tracking, notifications
+
+Implemented. See [PHASE_3.md](PHASE_3.md).
+
+- Optional OpenAI-compatible proposal generation with provider abstraction
+- Proposal review/edit, version history, draft/ready/archived workflow
+- Manual external apply + application status history
+- In-app notifications for proposal and application events
+- Dashboard sections for proposal work and application pipeline
+- AI remains optional (`AI_ENABLED=false` by default)
+
+Opportunity Hunter does not automatically submit applications.
+
+## Phase 4 — Operational hardening
 
 Not implemented.
 
-- Generate a draft the user can edit
-- Store provider and model metadata on the proposal
-- Never send the draft automatically
-
-## Phase 4 — Notifications and operational hardening
-
-Not implemented.
-
-- Notify a user when a new listing fits their profile
+- Notify a user when a new listing fits their profile (broader match alerts)
 - Optional enablement of the daily schedule flag in production
 - Backup notes, stricter security headers, mail delivery review
 
-Do not treat later phases as complete. Do not add auto-apply, browser automation, billing, embeddings, or vector search under Phase 2.
+Do not treat later phases as complete. Do not add auto-apply, browser automation, billing, embeddings, or vector search under Phase 3.

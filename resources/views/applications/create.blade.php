@@ -27,6 +27,9 @@
                 @endforeach
             </select>
         </div>
+        <x-field label="Contact name" name="contact_name" value="{{ old('contact_name') }}" />
+        <x-field label="Follow-up date" name="follow_up_at" type="date" value="{{ old('follow_up_at') }}" />
+        <x-field label="External application URL" name="external_url" type="url" value="{{ old('external_url') }}" />
         <x-field label="Notes" name="notes" type="textarea">{{ old('notes') }}</x-field>
         <x-button>Save status</x-button>
     </form>

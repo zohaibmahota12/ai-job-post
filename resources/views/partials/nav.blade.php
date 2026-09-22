@@ -9,7 +9,13 @@
     <a class="{{ $link }}" href="{{ route('saved.index') }}">Saved</a>
     <a class="{{ $link }}" href="{{ route('proposals.index') }}">Proposals</a>
     <a class="{{ $link }}" href="{{ route('applications.index') }}">Applications</a>
-    <a class="{{ $link }}" href="{{ route('notifications.index') }}">Notifications</a>
+    <a class="{{ $link }}" href="{{ route('notifications.index') }}">
+        Notifications
+        @php($unread = auth()->user()?->userNotifications()->whereNull('read_at')->count() ?? 0)
+        @if ($unread > 0)
+            <span class="ml-1 inline-flex min-w-5 items-center justify-center rounded-md bg-clay px-1.5 text-xs text-white">{{ $unread }}</span>
+        @endif
+    </a>
     <a class="{{ $link }}" href="{{ route('profile.edit') }}">Profile</a>
     @if (auth()->user()?->isAdmin())
         <p class="mt-4 px-3 text-xs uppercase tracking-wide {{ $variant === 'dark' ? 'text-sand/60' : 'text-bark' }}">Admin</p>

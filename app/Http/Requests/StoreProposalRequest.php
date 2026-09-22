@@ -22,6 +22,7 @@ class StoreProposalRequest extends FormRequest
     {
         return [
             'opportunity_id' => ['required', 'integer', 'exists:opportunities,id'],
+            'subject' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:20000'],
             'status' => ['required', Rule::enum(ProposalStatus::class)],
         ];

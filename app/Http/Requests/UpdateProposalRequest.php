@@ -20,6 +20,7 @@ class UpdateProposalRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'subject' => ['nullable', 'string', 'max:255'],
             'content' => ['nullable', 'string', 'max:20000'],
             'status' => ['required', Rule::enum(ProposalStatus::class)],
         ];

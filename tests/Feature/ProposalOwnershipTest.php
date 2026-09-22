@@ -32,7 +32,7 @@ class ProposalOwnershipTest extends TestCase
         $this->actingAs($user)->put(route('proposals.update', $proposal), [
             'content' => 'Updated draft.',
             'status' => 'ready',
-        ])->assertRedirect(route('proposals.edit', $proposal));
+        ])->assertRedirect(route('proposals.show', $proposal));
 
         $this->assertSame('Updated draft.', $proposal->fresh()->content);
         $this->assertSame('ready', $proposal->fresh()->status->value);

@@ -22,6 +22,7 @@
         <div><dt class="text-bark">Posted</dt><dd>{{ $opportunity->posted_at?->toDayDateTimeString() ?? 'Not listed' }}</dd></div>
         <div><dt class="text-bark">Deadline</dt><dd>{{ $opportunity->deadline_at?->toDayDateTimeString() ?? 'Not listed' }}</dd></div>
         <div><dt class="text-bark">Application status</dt><dd>{{ $application?->status->label() ?? 'Not tracking yet' }}</dd></div>
+        <div><dt class="text-bark">Proposal</dt><dd>{{ $proposal?->status->label() ?? 'None yet' }}</dd></div>
     </dl>
     @if ($opportunity->skills->isNotEmpty())
         <ul class="mt-4 flex flex-wrap gap-2">
@@ -34,7 +35,7 @@
         <div class="mt-6 max-w-3xl whitespace-pre-line text-sm leading-relaxed">{{ $opportunity->description }}</div>
     @endif
     @if ($url = $opportunity->safeSourceUrl())
-        <p class="mt-4"><a class="text-sm underline" href="{{ $url }}" rel="noopener noreferrer" target="_blank">Open original listing</a></p>
+        <p class="mt-4"><a class="text-sm underline" href="{{ $url }}" rel="noopener noreferrer" target="_blank">Apply externally</a></p>
         <p class="mt-1 text-sm text-bark">Apply on the original source. Opportunity Hunter does not auto-apply.</p>
     @endif
 
@@ -51,15 +52,33 @@
                 <x-button>Save</x-button>
             </form>
         @endif
+
         @if ($proposal)
-            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('proposals.edit', $proposal) }}">Open proposal draft</a>
-        @else
-            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('proposals.create', ['opportunity' => $opportunity->id]) }}">Write a proposal</a>
+            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('proposals.show', $proposal) }}">View proposal</a>
         @endif
-        @if ($application)
-            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('applications.edit', $application) }}">Update application</a>
+
+        @if ($aiEnabled)
+            <form method="POST" action="{{ route('opportunities.proposals.generate', $opportunity) }}">
+                @csrf
+                <x-button variant="secondary">{{ $proposal ? 'Regenerate proposal' : 'Generate proposal' }}</x-button>
+            </form>
         @else
-            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('applications.create', ['opportunity' => $opportunity->id]) }}">Track an application</a>
+            <p class="w-full text-sm text-bark">AI proposal generation is currently unavailable. You can still create and edit a proposal manually.</p>
+            @unless ($proposal)
+                <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('proposals.create', ['opportunity' => $opportunity->id]) }}">Write a proposal</a>
+            @endunless
+        @endif
+
+        @unless ($aiEnabled)
+            @if ($proposal)
+                <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('proposals.edit', $proposal) }}">Edit proposal</a>
+            @endif
+        @endunless
+
+        @if ($application)
+            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('applications.edit', $application) }}">Track application</a>
+        @else
+            <a class="inline-flex items-center rounded-md border border-line bg-white px-4 py-2 text-sm" href="{{ route('applications.create', ['opportunity' => $opportunity->id]) }}">Track application</a>
         @endif
     </div>
 

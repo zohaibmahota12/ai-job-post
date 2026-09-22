@@ -7,6 +7,7 @@ use Database\Factories\ApplicationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Application extends Model
 {
@@ -22,6 +23,9 @@ class Application extends Model
         'proposal_id',
         'status',
         'notes',
+        'contact_name',
+        'follow_up_at',
+        'external_url',
         'applied_at',
     ];
 
@@ -33,6 +37,7 @@ class Application extends Model
         return [
             'status' => ApplicationStatus::class,
             'applied_at' => 'datetime',
+            'follow_up_at' => 'datetime',
         ];
     }
 
@@ -58,5 +63,28 @@ class Application extends Model
     public function proposal(): BelongsTo
     {
         return $this->belongsTo(Proposal::class);
+    }
+
+    /**
+     * @return HasMany<ApplicationStatusHistory, $this>
+     */
+    public function statusHistories(): HasMany
+    {
+        return $this->hasMany(ApplicationStatusHistory::class)->orderByDesc('id');
+    }
+
+    public function safeExternalUrl(): ?string
+    {
+        $url = $this->external_url;
+
+        if (! is_string($url)) {
+            return null;
+        }
+
+        if (! str_starts_with($url, 'https://') && ! str_starts_with($url, 'http://')) {
+            return null;
+        }
+
+        return $url;
     }
 }

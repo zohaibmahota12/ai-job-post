@@ -35,6 +35,9 @@
                     @if (session('status'))
                         <p class="mb-4 rounded-md border border-moss/30 bg-moss/10 px-3 py-2 text-sm text-pine">{{ session('status') }}</p>
                     @endif
+                    @if (session('error'))
+                        <p class="mb-4 rounded-md border border-clay/30 bg-clay/10 px-3 py-2 text-sm text-clay">{{ session('error') }}</p>
+                    @endif
                     @yield('content')
                 </main>
             </div>

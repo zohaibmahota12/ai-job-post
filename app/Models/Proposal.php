@@ -21,6 +21,7 @@ class Proposal extends Model
         'user_id',
         'opportunity_id',
         'content',
+        'subject',
         'status',
     ];
 
@@ -31,6 +32,7 @@ class Proposal extends Model
     {
         return [
             'status' => ProposalStatus::class,
+            'generated_by_ai' => 'boolean',
             'ai_metadata' => 'array',
         ];
     }
@@ -57,5 +59,13 @@ class Proposal extends Model
     public function applications(): HasMany
     {
         return $this->hasMany(Application::class);
+    }
+
+    /**
+     * @return HasMany<ProposalVersion, $this>
+     */
+    public function versions(): HasMany
+    {
+        return $this->hasMany(ProposalVersion::class)->orderByDesc('id');
     }
 }

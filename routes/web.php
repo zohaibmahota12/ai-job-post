@@ -67,11 +67,28 @@ Route::middleware(['auth', 'active', 'verified'])->group(function () {
     Route::get('/saved', [SavedOpportunityController::class, 'index'])->name('saved.index');
     Route::delete('/saved/{savedOpportunity}', [SavedOpportunityController::class, 'destroy'])->name('saved.destroy');
 
-    Route::resource('proposals', ProposalController::class)->except(['show']);
+    Route::resource('proposals', ProposalController::class);
+    Route::post('/opportunities/{opportunity}/proposals/generate', [ProposalController::class, 'generateForOpportunity'])
+        ->middleware('throttle:proposal-generation')
+        ->name('opportunities.proposals.generate');
+    Route::post('/proposals/{proposal}/generate', [ProposalController::class, 'generate'])
+        ->middleware('throttle:proposal-generation')
+        ->name('proposals.generate');
+    Route::post('/proposals/{proposal}/regenerate', [ProposalController::class, 'regenerate'])
+        ->middleware('throttle:proposal-generation')
+        ->name('proposals.regenerate');
+    Route::post('/proposals/{proposal}/ready', [ProposalController::class, 'markReady'])->name('proposals.ready');
+    Route::post('/proposals/{proposal}/archive', [ProposalController::class, 'archive'])->name('proposals.archive');
+    Route::post('/proposals/{proposal}/versions/{version}/restore', [ProposalController::class, 'restoreVersion'])
+        ->name('proposals.versions.restore');
+
     Route::resource('applications', ApplicationController::class)->except(['show', 'destroy']);
+    Route::post('/applications/{application}/mark-applied', [ApplicationController::class, 'markApplied'])
+        ->name('applications.mark-applied');
 
     Route::get('/notifications', [NotificationController::class, 'index'])->name('notifications.index');
     Route::patch('/notifications/{notification}', [NotificationController::class, 'update'])->name('notifications.update');
+    Route::post('/notifications/read-all', [NotificationController::class, 'markAllRead'])->name('notifications.read-all');
 
     Route::middleware('admin')->prefix('admin')->name('admin.')->group(function () {
         Route::get('/users', [AdminUserController::class, 'index'])->name('users.index');
