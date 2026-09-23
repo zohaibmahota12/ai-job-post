@@ -15,12 +15,16 @@
         </div>
     </div>
     <dl class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+        <div><dt class="text-bark">Source</dt><dd>{{ $opportunity->source?->name ?? 'Unknown source' }}</dd></div>
+        <div><dt class="text-bark">Status</dt><dd>{{ $opportunity->status->label() }}</dd></div>
         <div><dt class="text-bark">Job type</dt><dd>{{ $opportunity->job_type?->label() ?? 'Unknown' }}</dd></div>
         <div><dt class="text-bark">Workplace</dt><dd>{{ $opportunity->workplace?->label() ?? 'Unknown' }}</dd></div>
         <div><dt class="text-bark">Location</dt><dd>{{ $opportunity->location ?: 'Not listed' }}</dd></div>
         <div><dt class="text-bark">Budget / salary</dt><dd>{{ $opportunity->budget_min || $opportunity->budget_max ? trim(($opportunity->budget_min ?? '').'–'.($opportunity->budget_max ?? '').' '.($opportunity->currency ?? '')) : 'Not listed' }}</dd></div>
         <div><dt class="text-bark">Posted</dt><dd>{{ $opportunity->posted_at?->toDayDateTimeString() ?? 'Not listed' }}</dd></div>
         <div><dt class="text-bark">Deadline</dt><dd>{{ $opportunity->deadline_at?->toDayDateTimeString() ?? 'Not listed' }}</dd></div>
+        <div><dt class="text-bark">Original URL</dt><dd class="break-all">{{ $opportunity->safeSourceUrl() ?? 'Not listed' }}</dd></div>
+        <div><dt class="text-bark">Match score</dt><dd>{{ $scored->score }}</dd></div>
         <div><dt class="text-bark">Application status</dt><dd>{{ $application?->status->label() ?? 'Not tracking yet' }}</dd></div>
         <div><dt class="text-bark">Proposal</dt><dd>{{ $proposal?->status->label() ?? 'None yet' }}</dd></div>
     </dl>

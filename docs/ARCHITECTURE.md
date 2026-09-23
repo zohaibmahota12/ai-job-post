@@ -56,7 +56,7 @@ Create an admin with `php artisan user:make-admin {email}` after that person has
 | `user_profiles` | Bio, experience, location, job type, remote preference, budget, currency, keywords |
 | `skills` | Canonical skill name and slug |
 | `user_skills` | User ↔ skill |
-| `sources` | External source registry. `key` is unique. `driver` selects an adapter. `type` is the source family. `config` holds non-secret endpoint settings. `last_run_at` / `last_success_at` / `last_error` summarize health |
+| `sources` | External source registry. `key` is unique. `driver` selects an adapter. `type` is the source family. `config` holds non-secret endpoint settings. Health summary: `last_run_at`, `last_success_at`, `last_failure_at`, `last_error`, `consecutive_failures`, last item/created/updated/duplicated counts, `last_duration_ms` |
 | `source_runs` | One row per collection attempt, with found/created/updated/skipped/duplicated counts |
 | `opportunities` | Normalized listing, raw payload, `canonical_url`, content hash |
 | `opportunity_skills` | Opportunity ↔ skill |
@@ -86,12 +86,14 @@ Registered adapters:
 | Driver | Status |
 | --- | --- |
 | `rss` | Implemented. Public RSS 2.0 / Atom via `SafeHttpFetcher` |
-| `json_api` | Implemented as a configuration-driven template. No commercial provider is claimed as supported until an operator configures a permitted public endpoint and tests it |
+| `json_api` | Configuration-driven public JSON API adapter. Seeded Remotive, RemoteOK, and Jobicy endpoints ship disabled until an operator enables them |
 | `agent_reach` | Refuses to collect. Optional boundary only. See [AGENT_REACH.md](AGENT_REACH.md) |
+
+Seeded real sources (disabled by default): `remotive_remote_jobs`, `remoteok_api`, `weworkremotely_programming_rss`, `jobicy_remote_jobs`. See [PHASE_4.md](PHASE_4.md).
 
 Source-specific parsing stays inside the adapter. The collector never depends on Agent Reach.
 
-`SafeHttpFetcher` validates `http`/`https` URLs, blocks credentials in URLs, blocks localhost/private/link-local/metadata ranges, resolves DNS and rejects private answers, enforces connect/response timeouts, caps response size, and follows a limited number of redirects with re-validation on each hop.
+`SafeHttpFetcher` validates `http`/`https` URLs, blocks credentials in URLs, blocks localhost/private/link-local/metadata ranges, resolves DNS and rejects private answers, enforces connect/response timeouts, caps response size, follows a limited number of redirects with re-validation on each hop, and retries only connection failures and HTTP 5xx (bounded; 4xx and blocked URLs are not retried).
 
 ## Collection lifecycle
 
@@ -114,8 +116,12 @@ Repeated runs do not create duplicate opportunities. Exit code is non-zero when 
 ### Deduplication order
 
 1. Same `source_id` + `external_id`
-2. Same `canonical_url` (host + path, lowercased, `www.` stripped, query string ignored)
+2. Same `canonical_url` (host + path, lowercased, `www.` stripped, tracking query params removed, meaningful query params kept and sorted)
 3. Same `content_hash` fingerprint of normalized title + company + canonical URL
+
+### Lifecycle
+
+Opportunities use `open`, `closed`, and `expired`. Collection may mark a listing closed when a source supplies an explicit closed signal. Opportunities with a known past `deadline_at` are marked expired (never deleted). Deadlines are never invented.
 
 ### Matching and scoring
 
@@ -187,11 +193,11 @@ Optional AI configuration lives in `config/ai.php` / `AI_*` environment variable
 
 ## Known limitations
 
-- HTML career-page scraping is not implemented
-- No commercial JSON job board is bundled as a verified provider
+- HTML career-page scraping is not implemented as a universal scraper
 - Agent Reach is not invoked
 - Matching all users after collection is synchronous; fine for small SaaS on shared hosting, not a background worker architecture
-- Descriptions are escaped plain text; rich HTML from feeds is stripped at parse time
+- Descriptions are escaped plain text; HTML from feeds/APIs is stripped at normalize time
 - AI proposal generation depends on an external provider when enabled; the app stays usable when AI is disabled
+- Seeded public sources remain disabled until an operator enables them and accepts provider attribution/rate limits
 
-See [Agent Reach findings](AGENT_REACH.md), [Phase 3](PHASE_3.md), and [Roadmap](ROADMAP.md).
+See [Agent Reach findings](AGENT_REACH.md), [Phase 3](PHASE_3.md), [Phase 4](PHASE_4.md), [Production deployment](PRODUCTION_DEPLOYMENT.md), and [Roadmap](ROADMAP.md).

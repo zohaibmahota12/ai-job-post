@@ -1,0 +1,28 @@
+{
+  "jobs": [
+    {
+      "id": 101,
+      "url": "https://remotive.com/remote-jobs/software-dev/laravel-engineer-101",
+      "title": "Laravel Engineer",
+      "company_name": "Remotive Example Co",
+      "category": "software-dev",
+      "tags": ["Laravel", "PHP"],
+      "job_type": "full_time",
+      "publication_date": "2026-09-20T12:00:00",
+      "candidate_required_location": "Worldwide",
+      "description": "<p>Build APIs with <strong>Laravel</strong>.</p>"
+    },
+    {
+      "id": 102,
+      "url": "https://remotive.com/remote-jobs/software-dev/react-engineer-102",
+      "title": "React Engineer",
+      "company_name": "Remotive Example Co",
+      "category": "software-dev",
+      "tags": ["React"],
+      "job_type": "contract",
+      "publication_date": "2026-09-21T08:00:00",
+      "candidate_required_location": "USA",
+      "description": "Ship UI features."
+    }
+  ]
+}

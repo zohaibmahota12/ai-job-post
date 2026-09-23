@@ -1,0 +1,27 @@
+[
+  {
+    "legal": "Please attribute RemoteOK"
+  },
+  {
+    "id": "9001",
+    "slug": "php-developer-northwind",
+    "position": "PHP Developer",
+    "company": "Northwind Remote",
+    "description": "Maintain PHP services.",
+    "location": "Remote",
+    "date": "2026-09-18T10:00:00+00:00",
+    "url": "https://remoteok.com/remote-jobs/9001",
+    "tags": ["PHP", "MySQL"]
+  },
+  {
+    "id": "9002",
+    "slug": "frontend-engineer",
+    "position": "Frontend Engineer",
+    "company": "Acme Remote",
+    "description": "Build accessible interfaces.",
+    "location": "Worldwide",
+    "date": "2026-09-19T10:00:00+00:00",
+    "url": "https://remoteok.com/remote-jobs/9002",
+    "tags": ["CSS", "JavaScript"]
+  }
+]

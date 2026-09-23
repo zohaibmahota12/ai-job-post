@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\SourceHealth;
 use Database\Factories\SourceFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -26,6 +27,13 @@ class Source extends Model
         'last_run_at',
         'last_success_at',
         'last_error',
+        'consecutive_failures',
+        'last_failure_at',
+        'last_item_count',
+        'last_created_count',
+        'last_updated_count',
+        'last_duplicated_count',
+        'last_duration_ms',
     ];
 
     /**
@@ -45,7 +53,36 @@ class Source extends Model
             'config' => 'array',
             'last_run_at' => 'datetime',
             'last_success_at' => 'datetime',
+            'last_failure_at' => 'datetime',
+            'consecutive_failures' => 'integer',
+            'last_item_count' => 'integer',
+            'last_created_count' => 'integer',
+            'last_updated_count' => 'integer',
+            'last_duplicated_count' => 'integer',
+            'last_duration_ms' => 'integer',
         ];
+    }
+
+    /**
+     * Explainable source health for admin observability.
+     */
+    public function health(): SourceHealth
+    {
+        if (! $this->is_enabled) {
+            return SourceHealth::Disabled;
+        }
+
+        $failures = (int) $this->consecutive_failures;
+
+        if ($failures >= 3) {
+            return SourceHealth::Failing;
+        }
+
+        if ($failures >= 1 || $this->last_error !== null) {
+            return SourceHealth::Warning;
+        }
+
+        return SourceHealth::Healthy;
     }
 
     /**

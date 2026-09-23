@@ -17,6 +17,20 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Collection locking
+    |--------------------------------------------------------------------------
+    |
+    | Prevents overlapping collection runs under cPanel cron. Uses the
+    | application cache store (database by default on shared hosting).
+    |
+    */
+
+    'collection' => [
+        'lock_seconds' => (int) env('OPPORTUNITY_COLLECTION_LOCK_SECONDS', 900),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
     | Outbound HTTP for source adapters
     |--------------------------------------------------------------------------
     */
@@ -26,6 +40,8 @@ return [
         'timeout' => (float) env('OPPORTUNITY_HTTP_TIMEOUT', 15),
         'max_redirects' => (int) env('OPPORTUNITY_HTTP_MAX_REDIRECTS', 3),
         'max_bytes' => (int) env('OPPORTUNITY_HTTP_MAX_BYTES', 2_000_000),
+        'max_retries' => (int) env('OPPORTUNITY_HTTP_MAX_RETRIES', 2),
+        'retry_delay_ms' => (int) env('OPPORTUNITY_HTTP_RETRY_DELAY_MS', 250),
         'user_agent' => env('OPPORTUNITY_HTTP_USER_AGENT', 'OpportunityHunter/2.0 (+https://github.com/zohaibmahota12/ai-job-post)'),
     ],
 

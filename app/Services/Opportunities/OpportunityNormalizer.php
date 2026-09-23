@@ -4,7 +4,6 @@ namespace App\Services\Opportunities;
 
 use App\JobType;
 use App\Models\Source;
-use App\OpportunityStatus;
 use App\Sources\NormalizedOpportunity;
 use App\Sources\RawOpportunity;
 use App\Workplace;
@@ -15,7 +14,10 @@ use Throwable;
 
 class OpportunityNormalizer
 {
-    public function __construct(private OpportunityDeduplicator $deduplicator) {}
+    public function __construct(
+        private OpportunityDeduplicator $deduplicator,
+        private OpportunityLifecycle $lifecycle,
+    ) {}
 
     public function normalize(RawOpportunity $raw, Source $source): NormalizedOpportunity
     {
@@ -27,11 +29,12 @@ class OpportunityNormalizer
 
         [$budgetMin, $budgetMax] = $this->budgets($raw->budgetMin, $raw->budgetMax);
         $sourceUrl = $this->url($raw->sourceUrl);
+        $deadlineAt = $this->timestamp($raw->deadlineAt);
 
         return new NormalizedOpportunity(
             sourceId: $source->id,
             title: $title,
-            description: $this->nullableText($raw->description),
+            description: $this->description($raw->description),
             company: $this->nullableText($raw->company),
             sourceUrl: $sourceUrl,
             canonicalUrl: $this->deduplicator->canonicalUrl($sourceUrl),
@@ -43,12 +46,24 @@ class OpportunityNormalizer
             budgetMax: $budgetMax,
             currency: $this->currency($raw->currency),
             postedAt: $this->timestamp($raw->postedAt),
-            deadlineAt: $this->timestamp($raw->deadlineAt),
+            deadlineAt: $deadlineAt,
             requiredExperienceYears: $this->years($raw->requiredExperienceYears),
-            status: OpportunityStatus::Open,
+            status: $this->lifecycle->statusFromListingSignal($raw->listingStatus, $deadlineAt),
             skillNames: $this->skills($raw->skills),
             raw: $raw->raw,
         );
+    }
+
+    private function description(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $plain = html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $text = trim(preg_replace("/[ \t]+/u", ' ', preg_replace("/\r\n?|\n/u", "\n", $plain) ?? '') ?? '');
+
+        return $text === '' ? null : $text;
     }
 
     private function nullableText(?string $value): ?string

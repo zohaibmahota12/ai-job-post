@@ -123,13 +123,14 @@ class JsonApiSourceAdapter implements SourceAdapter
             externalId: $this->stringValue($item, $fieldMap['external_id'] ?? 'id'),
             location: $this->stringValue($item, $fieldMap['location'] ?? 'location'),
             jobType: $this->stringValue($item, $fieldMap['job_type'] ?? 'job_type'),
-            workplace: $this->stringValue($item, $fieldMap['workplace'] ?? 'workplace'),
+            workplace: $this->workplaceValue($item, $fieldMap),
             budgetMin: $this->numericString($item, $fieldMap['budget_min'] ?? 'budget_min'),
             budgetMax: $this->numericString($item, $fieldMap['budget_max'] ?? 'budget_max'),
             currency: $this->stringValue($item, $fieldMap['currency'] ?? 'currency'),
             postedAt: $this->stringValue($item, $fieldMap['posted_at'] ?? 'posted_at'),
             deadlineAt: $this->stringValue($item, $fieldMap['deadline_at'] ?? 'deadline_at'),
             requiredExperienceYears: $this->intValue($item, $fieldMap['required_experience_years'] ?? 'required_experience_years'),
+            listingStatus: $this->stringValue($item, $fieldMap['listing_status'] ?? 'listing_status'),
             skills: $skills,
             raw: [
                 'source_key' => $source->key,
@@ -158,8 +159,36 @@ class JsonApiSourceAdapter implements SourceAdapter
             'posted_at' => 'posted_at',
             'deadline_at' => 'deadline_at',
             'required_experience_years' => 'required_experience_years',
+            'listing_status' => 'listing_status',
             'skills' => 'skills',
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $item
+     * @param  array<string, string>  $fieldMap
+     */
+    private function workplaceValue(array $item, array $fieldMap): ?string
+    {
+        $workplace = $this->stringValue($item, $fieldMap['workplace'] ?? 'workplace');
+
+        if ($workplace !== null) {
+            return $workplace;
+        }
+
+        $remotePath = $fieldMap['remote'] ?? null;
+
+        if (! is_string($remotePath) || $remotePath === '') {
+            return null;
+        }
+
+        $remote = Arr::get($item, $remotePath);
+
+        if ($remote === true || $remote === 1 || $remote === '1' || $remote === 'true') {
+            return 'remote';
+        }
+
+        return null;
     }
 
     /**

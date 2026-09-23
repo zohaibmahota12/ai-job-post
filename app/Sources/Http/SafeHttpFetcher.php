@@ -26,29 +26,21 @@ class SafeHttpFetcher
         $connectTimeout = (float) config('opportunity.http.connect_timeout', 5);
         $timeout = (float) config('opportunity.http.timeout', 15);
         $userAgent = (string) config('opportunity.http.user_agent');
+        $maxRetries = max(0, (int) config('opportunity.http.max_retries', 2));
+        $retryDelayMs = max(0, (int) config('opportunity.http.retry_delay_ms', 250));
 
         $current = $url;
         $redirects = 0;
 
         while (true) {
-            try {
-                $response = Http::withHeaders([
-                    'Accept' => 'application/rss+xml, application/atom+xml, application/json, application/xml, text/xml, text/plain;q=0.9, */*;q=0.8',
-                    'User-Agent' => $userAgent,
-                ])
-                    ->withOptions([
-                        'allow_redirects' => false,
-                        'http_errors' => false,
-                    ])
-                    ->connectTimeout($connectTimeout)
-                    ->timeout($timeout)
-                    ->get($current);
-            } catch (ConnectionException $exception) {
-                throw new SourceCollectionException(
-                    'HTTP request failed: '.$exception->getMessage(),
-                    previous: $exception,
-                );
-            }
+            $response = $this->requestWithRetry(
+                $current,
+                $connectTimeout,
+                $timeout,
+                $userAgent,
+                $maxRetries,
+                $retryDelayMs,
+            );
 
             if ($this->isRedirect($response)) {
                 $location = $response->header('Location');
@@ -68,6 +60,18 @@ class SafeHttpFetcher
                 $current = $next;
 
                 continue;
+            }
+
+            if ($response->clientError()) {
+                throw new SourceCollectionException(
+                    'HTTP '.$response->status().' while fetching the source URL.',
+                );
+            }
+
+            if ($response->serverError()) {
+                throw new SourceCollectionException(
+                    'HTTP '.$response->status().' while fetching the source URL.',
+                );
             }
 
             if ($response->failed()) {
@@ -90,6 +94,73 @@ class SafeHttpFetcher
                 'status' => $response->status(),
             ];
         }
+    }
+
+    /**
+     * Retry only transient connection failures and 5xx responses.
+     * Client errors (4xx), blocked URLs, and invalid config are not retried.
+     */
+    private function requestWithRetry(
+        string $url,
+        float $connectTimeout,
+        float $timeout,
+        string $userAgent,
+        int $maxRetries,
+        int $retryDelayMs,
+    ): Response {
+        $attempt = 0;
+        $lastException = null;
+
+        while ($attempt <= $maxRetries) {
+            try {
+                $response = Http::withHeaders([
+                    'Accept' => 'application/rss+xml, application/atom+xml, application/json, application/xml, text/xml, text/plain;q=0.9, */*;q=0.8',
+                    'User-Agent' => $userAgent,
+                ])
+                    ->withOptions([
+                        'allow_redirects' => false,
+                        'http_errors' => false,
+                    ])
+                    ->connectTimeout($connectTimeout)
+                    ->timeout($timeout)
+                    ->get($url);
+
+                if ($response->serverError() && $attempt < $maxRetries) {
+                    $attempt++;
+                    $this->sleep($retryDelayMs * $attempt);
+
+                    continue;
+                }
+
+                return $response;
+            } catch (ConnectionException $exception) {
+                $lastException = $exception;
+
+                if ($attempt >= $maxRetries) {
+                    throw new SourceCollectionException(
+                        'HTTP request failed: '.$exception->getMessage(),
+                        previous: $exception,
+                    );
+                }
+
+                $attempt++;
+                $this->sleep($retryDelayMs * $attempt);
+            }
+        }
+
+        throw new SourceCollectionException(
+            'HTTP request failed'.($lastException ? ': '.$lastException->getMessage() : '.'),
+            previous: $lastException,
+        );
+    }
+
+    private function sleep(int $milliseconds): void
+    {
+        if ($milliseconds <= 0) {
+            return;
+        }
+
+        usleep($milliseconds * 1000);
     }
 
     /**

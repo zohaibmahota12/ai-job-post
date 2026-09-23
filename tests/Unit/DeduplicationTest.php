@@ -65,13 +65,44 @@ class DeduplicationTest extends TestCase
         $second = $normalizer->normalize(new RawOpportunity(
             title: 'Role B changed title should still match URL',
             company: 'Other',
-            sourceUrl: 'https://example.com/jobs/9?ref=1',
+            sourceUrl: 'https://example.com/jobs/9?utm_campaign=spring',
         ), $source);
 
         $existing = $deduplicator->findExisting($second);
 
         $this->assertNotNull($existing);
         $this->assertSame('example.com/jobs/9', $existing->canonical_url);
+    }
+
+    public function test_meaningful_query_parameters_do_not_collapse_distinct_listings(): void
+    {
+        $source = Source::factory()->create();
+        $normalizer = app(OpportunityNormalizer::class);
+        $deduplicator = app(OpportunityDeduplicator::class);
+
+        $first = $normalizer->normalize(new RawOpportunity(
+            title: 'Role C',
+            company: 'Acme',
+            sourceUrl: 'https://example.com/jobs/view?id=1',
+        ), $source);
+
+        Opportunity::query()->create([
+            'source_id' => $source->id,
+            'title' => 'Role C',
+            'company' => 'Acme',
+            'source_url' => 'https://example.com/jobs/view?id=1',
+            'canonical_url' => $first->canonicalUrl,
+            'content_hash' => $deduplicator->fingerprint($first),
+            'status' => 'open',
+        ]);
+
+        $second = $normalizer->normalize(new RawOpportunity(
+            title: 'Role C',
+            company: 'Acme',
+            sourceUrl: 'https://example.com/jobs/view?id=2',
+        ), $source);
+
+        $this->assertNull($deduplicator->findExisting($second));
     }
 
     public function test_fallback_fingerprint_uses_title_company_and_canonical_url(): void

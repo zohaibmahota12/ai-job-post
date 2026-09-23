@@ -23,6 +23,7 @@ final class RawOpportunity
         public ?string $postedAt = null,
         public ?string $deadlineAt = null,
         public ?int $requiredExperienceYears = null,
+        public ?string $listingStatus = null,
         public array $skills = [],
         public array $raw = [],
     ) {}

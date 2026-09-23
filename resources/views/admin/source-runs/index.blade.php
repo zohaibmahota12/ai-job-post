@@ -10,6 +10,9 @@
                 <tr>
                     <th class="px-4 py-3 font-medium">Source</th>
                     <th class="px-4 py-3 font-medium">Status</th>
+                    <th class="px-4 py-3 font-medium">Started</th>
+                    <th class="px-4 py-3 font-medium">Finished</th>
+                    <th class="px-4 py-3 font-medium">Duration</th>
                     <th class="px-4 py-3 font-medium">Found</th>
                     <th class="px-4 py-3 font-medium">Created</th>
                     <th class="px-4 py-3 font-medium">Updated</th>
@@ -23,6 +26,9 @@
                     <tr class="border-b border-line last:border-0">
                         <td class="px-4 py-3">{{ $run->source?->name }}</td>
                         <td class="px-4 py-3">{{ $run->status->label() }}</td>
+                        <td class="px-4 py-3">{{ $run->started_at?->toDayDateTimeString() ?? '—' }}</td>
+                        <td class="px-4 py-3">{{ $run->finished_at?->toDayDateTimeString() ?? '—' }}</td>
+                        <td class="px-4 py-3">{{ $run->durationMs() !== null ? $run->durationMs().' ms' : '—' }}</td>
                         <td class="px-4 py-3">{{ $run->items_found }}</td>
                         <td class="px-4 py-3">{{ $run->items_created }}</td>
                         <td class="px-4 py-3">{{ $run->items_updated }}</td>
@@ -31,7 +37,7 @@
                         <td class="px-4 py-3">{{ $run->error_message }}</td>
                     </tr>
                 @empty
-                    <tr><td class="px-4 py-6 text-bark" colspan="8">No collection runs yet.</td></tr>
+                    <tr><td class="px-4 py-6 text-bark" colspan="11">No collection runs yet.</td></tr>
                 @endforelse
             </tbody>
         </table>

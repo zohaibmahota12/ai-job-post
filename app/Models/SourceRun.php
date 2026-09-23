@@ -44,6 +44,15 @@ class SourceRun extends Model
         ];
     }
 
+    public function durationMs(): ?int
+    {
+        if ($this->started_at === null || $this->finished_at === null) {
+            return null;
+        }
+
+        return (int) max(0, $this->started_at->diffInMilliseconds($this->finished_at));
+    }
+
     /**
      * @return BelongsTo<Source, $this>
      */

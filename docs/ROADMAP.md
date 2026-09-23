@@ -38,12 +38,20 @@ Implemented. See [PHASE_3.md](PHASE_3.md).
 
 Opportunity Hunter does not automatically submit applications.
 
-## Phase 4 — Operational hardening
+## Phase 4 — Production readiness
 
-Not implemented.
+Implemented. See [PHASE_4.md](PHASE_4.md) and [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md).
+
+- Source health tracking and admin observability
+- Bounded HTTP retries for transient fetch failures
+- Stronger canonical URL handling and opportunity lifecycle (open / closed / expired)
+- Seeded verified public sources (disabled until enabled by an operator)
+- Collection locking for safe cPanel cron use
+- Production deployment documentation for Apache / MySQL / shared hosting
+
+## Later ideas (not Phase 4)
 
 - Notify a user when a new listing fits their profile (broader match alerts)
-- Optional enablement of the daily schedule flag in production
-- Backup notes, stricter security headers, mail delivery review
+- Backup automation notes and stricter browser security headers review
 
-Do not treat later phases as complete. Do not add auto-apply, browser automation, billing, embeddings, or vector search under Phase 3.
+Do not treat later ideas as complete. Do not add auto-apply, browser automation, billing, embeddings, or vector search under Phase 4.

@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>We Work Remotely Programming Jobs</title>
+    <link>https://weworkremotely.com/</link>
+    <description>Fixture feed for offline tests</description>
+    <item>
+      <title>Example Corp: Senior Laravel Developer</title>
+      <link>https://weworkremotely.com/remote-jobs/111-senior-laravel-developer</link>
+      <guid>https://weworkremotely.com/remote-jobs/111-senior-laravel-developer</guid>
+      <pubDate>Mon, 21 Sep 2026 12:00:00 +0000</pubDate>
+      <description><![CDATA[<p>Remote Laravel work.</p>]]></description>
+    </item>
+    <item>
+      <title>Example Corp: React Native Engineer</title>
+      <link>https://weworkremotely.com/remote-jobs/112-react-native-engineer?utm_source=feed</link>
+      <guid>https://weworkremotely.com/remote-jobs/112-react-native-engineer</guid>
+      <pubDate>Tue, 22 Sep 2026 12:00:00 +0000</pubDate>
+      <description><![CDATA[Build mobile apps.]]></description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,30 @@
+{
+  "jobs": [
+    {
+      "id": 501,
+      "url": "https://jobicy.com/jobs/501-backend-engineer",
+      "jobTitle": "Backend Engineer",
+      "companyName": "Jobicy Sample",
+      "jobDescription": "<p>Design reliable services.</p>",
+      "jobGeo": "Remote",
+      "jobType": "full-time",
+      "pubDate": "2026-09-17 09:00:00",
+      "salaryMin": 80000,
+      "salaryMax": 110000,
+      "salaryCurrency": "USD",
+      "tags": ["Go", "PostgreSQL"]
+    },
+    {
+      "id": 502,
+      "url": "https://jobicy.com/jobs/502-closed-role",
+      "jobTitle": "Closed Role",
+      "companyName": "Jobicy Sample",
+      "jobDescription": "No longer accepting applications.",
+      "jobGeo": "Remote",
+      "jobType": "contract",
+      "pubDate": "2026-08-01 09:00:00",
+      "listing_status": "closed",
+      "tags": ["QA"]
+    }
+  ]
+}

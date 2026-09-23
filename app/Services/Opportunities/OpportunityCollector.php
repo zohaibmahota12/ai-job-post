@@ -13,11 +13,14 @@ use App\Sources\NormalizedOpportunity;
 use App\Sources\RawOpportunity;
 use App\Sources\SourceCollectionException;
 use App\Sources\SourceManager;
+use App\Support\SecretRedactor;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
+use RuntimeException;
 use Throwable;
 
 class OpportunityCollector
@@ -28,6 +31,8 @@ class OpportunityCollector
         private OpportunityDeduplicator $deduplicator,
         private SkillAttacher $skills,
         private MatchSynchronizer $matches,
+        private OpportunityLifecycle $lifecycle,
+        private SecretRedactor $redactor,
     ) {}
 
     /**
@@ -35,17 +40,32 @@ class OpportunityCollector
      */
     public function collect(?string $sourceKeyOrDriver = null): Collection
     {
-        $sources = Source::query()
-            ->when($sourceKeyOrDriver !== null, function ($query) use ($sourceKeyOrDriver) {
-                $query->where(function ($inner) use ($sourceKeyOrDriver) {
-                    $inner->where('key', $sourceKeyOrDriver)
-                        ->orWhere('driver', $sourceKeyOrDriver);
-                });
-            })
-            ->orderBy('id')
-            ->get();
+        $lockSeconds = max(60, (int) config('opportunity.collection.lock_seconds', 900));
+        $lock = Cache::lock('opportunities:collect', $lockSeconds);
 
-        return $sources->map(fn (Source $source): SourceRun => $this->collectSource($source));
+        if (! $lock->get()) {
+            throw new RuntimeException('Opportunity collection is already running.');
+        }
+
+        try {
+            $sources = Source::query()
+                ->when($sourceKeyOrDriver !== null, function ($query) use ($sourceKeyOrDriver) {
+                    $query->where(function ($inner) use ($sourceKeyOrDriver) {
+                        $inner->where('key', $sourceKeyOrDriver)
+                            ->orWhere('driver', $sourceKeyOrDriver);
+                    });
+                })
+                ->orderBy('id')
+                ->get();
+
+            $runs = $sources->map(fn (Source $source): SourceRun => $this->collectSource($source));
+
+            $this->lifecycle->expirePastDeadlines();
+
+            return $runs;
+        } finally {
+            $lock->release();
+        }
     }
 
     public function collectSource(Source $source): SourceRun
@@ -172,7 +192,8 @@ class OpportunityCollector
             || $existing->currency !== $normalized->currency
             || optional($existing->posted_at)?->toDateTimeString() !== $normalized->postedAt
             || optional($existing->deadline_at)?->toDateTimeString() !== $normalized->deadlineAt
-            || $existing->required_experience_years !== $normalized->requiredExperienceYears;
+            || $existing->required_experience_years !== $normalized->requiredExperienceYears
+            || $existing->status !== $normalized->status;
     }
 
     private function persistExisting(Opportunity $existing, NormalizedOpportunity $normalized, Source $source): void
@@ -225,7 +246,7 @@ class OpportunityCollector
             'items_updated' => $counts['updated'] ?? 0,
             'items_skipped' => $counts['skipped'] ?? 0,
             'items_duplicated' => $counts['duplicated'] ?? 0,
-            'error_message' => $error,
+            'error_message' => $this->redactor->redact($error),
         ])->save();
 
         return $run->refresh();
@@ -240,22 +261,41 @@ class OpportunityCollector
 
     private function touchSource(Source $source, SourceRun $run): void
     {
-        $source->forceFill([
+        $durationMs = null;
+
+        if ($run->started_at !== null && $run->finished_at !== null) {
+            $durationMs = (int) max(0, $run->started_at->diffInMilliseconds($run->finished_at));
+        }
+
+        $payload = [
             'last_run_at' => $run->finished_at ?? now(),
-            'last_success_at' => $run->status === SourceRunStatus::Succeeded
-                ? ($run->finished_at ?? now())
-                : $source->last_success_at,
-            'last_error' => $run->status === SourceRunStatus::Failed
-                ? $run->error_message
-                : ($run->status === SourceRunStatus::Succeeded ? null : $source->last_error),
-        ])->save();
+            'last_duration_ms' => $durationMs,
+        ];
+
+        if ($run->status === SourceRunStatus::Succeeded) {
+            $payload['last_success_at'] = $run->finished_at ?? now();
+            $payload['last_error'] = null;
+            $payload['consecutive_failures'] = 0;
+            $payload['last_item_count'] = $run->items_found;
+            $payload['last_created_count'] = $run->items_created;
+            $payload['last_updated_count'] = $run->items_updated;
+            $payload['last_duplicated_count'] = $run->items_duplicated;
+        } elseif ($run->status === SourceRunStatus::Failed) {
+            $payload['last_error'] = $run->error_message;
+            $payload['last_failure_at'] = $run->finished_at ?? now();
+            $payload['consecutive_failures'] = ((int) $source->consecutive_failures) + 1;
+        }
+
+        $source->forceFill($payload)->save();
     }
 
     private function recordError(SourceRun $run, Source $source, Throwable $exception, string $level): void
     {
+        $message = $this->redactor->redact($exception->getMessage()) ?? $exception->getMessage();
+
         SystemError::query()->create([
             'level' => $level,
-            'message' => $exception->getMessage(),
+            'message' => $message,
             'context' => [
                 'source' => $source->key ?? $source->driver,
                 'driver' => $source->driver,
@@ -265,7 +305,7 @@ class OpportunityCollector
             'occurred_at' => now(),
         ]);
 
-        Log::log($level, $exception->getMessage(), [
+        Log::log($level, $message, [
             'source' => $source->key ?? $source->driver,
             'source_run_id' => $run->id,
         ]);
