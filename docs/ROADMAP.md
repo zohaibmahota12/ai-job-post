@@ -49,9 +49,18 @@ Implemented. See [PHASE_4.md](PHASE_4.md) and [PRODUCTION_DEPLOYMENT.md](PRODUCT
 - Collection locking for safe cPanel cron use
 - Production deployment documentation for Apache / MySQL / shared hosting
 
-## Later ideas (not Phase 4)
+## Phase 5 — Production deployment and launch hardening
+
+Documented. See [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) and [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md).
+
+- PHP 8.3+ extension and production `.env` requirements
+- MySQL-compatible migrations (including InnoDB-safe prefix index for long `canonical_url`)
+- Mail, cron, storage, security, and smoke-test checklist for cPanel
+- Direct `opportunities:collect` cron preferred; scheduler remains opt-in without duplicate paths
+
+## Later ideas (not Phase 5)
 
 - Notify a user when a new listing fits their profile (broader match alerts)
 - Backup automation notes and stricter browser security headers review
 
-Do not treat later ideas as complete. Do not add auto-apply, browser automation, billing, embeddings, or vector search under Phase 4.
+Do not treat later ideas as complete. Do not add auto-apply, browser automation, billing, embeddings, or vector search under Phase 5.

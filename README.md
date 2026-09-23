@@ -4,17 +4,17 @@ Opportunity Hunter is a multi-user web app for developers who want a private sho
 
 The product does not apply, send email to clients, or submit forms on your behalf. You review a listing and apply yourself.
 
-This repository is the Phase 1 foundation: accounts, profiles, the database, a source adapter seam, and a dashboard. Live collection is not turned on.
+Phases 1–4 are complete: accounts, profiles, opportunity collection, deterministic matching, AI proposals (optional), applications, and production-ready sources. Phase 5 documents cPanel production launch.
 
 ## Requirements
 
-- PHP 8.3 or newer, with `mbstring`, `xml`, `curl`, `sqlite3`, `mysql`, `bcmath`, and `intl`
+- PHP **8.3+** with: `ctype`, `curl`, `dom`, `fileinfo`, `filter`, `hash`, `mbstring`, `openssl`, `pcre`, `pdo`, `pdo_mysql` (production) or `pdo_sqlite` (local/tests), `session`, `tokenizer`, `xml`, `bcmath`, `json`, `zip` (recommended), `intl` (recommended)
 - Composer
 - Node.js 20 or newer, only to compile CSS
-- MySQL 8 for a cPanel deployment
+- MySQL 8 / MariaDB for a cPanel deployment
 - SQLite is enough for local development and the test suite
 
-The app does not need Docker, Redis, a queue worker, or root access.
+The app does not need Docker, Redis, a queue worker, Supervisor, or root access.
 
 ## Local setup
 
@@ -56,31 +56,36 @@ Then run `php artisan migrate --force --seed`.
 
 ## Shared hosting
 
+See the full guide and launch checklist:
+
+- [Production deployment (cPanel)](docs/PRODUCTION_DEPLOYMENT.md)
+- [Production checklist](docs/PRODUCTION_CHECKLIST.md)
+
 Point the domain document root at the `public` directory. Do not expose the project root.
 
-Cron can call the collection command directly:
+Recommended cron (keep `OPPORTUNITY_SCHEDULE_COLLECTION=false`):
 
 ```cron
-0 6 * * * php /home/USER/opportunity-hunter/artisan opportunities:collect
+0 6 * * * /usr/bin/php /home/USER/opportunity-hunter/artisan opportunities:collect
 ```
 
-`OPPORTUNITY_SCHEDULE_COLLECTION` stays `false` until collection is implemented. When it is `true`, a one-minute cron entry is enough:
+Do not also enable `schedule:run` for collection unless you turn the direct collect cron off and set `OPPORTUNITY_SCHEDULE_COLLECTION=true`.
 
-```cron
-* * * * * php /home/USER/opportunity-hunter/artisan schedule:run
-```
-
-Use `QUEUE_CONNECTION=sync`, `CACHE_STORE=database` or `file`, and `SESSION_DRIVER=database`. No Redis process is required.
+Use `APP_ENV=production`, `APP_DEBUG=false`, `QUEUE_CONNECTION=sync`, `CACHE_STORE=database`, and `SESSION_DRIVER=database`. No Redis process is required.
 
 ## Tests
 
+Requires PHP 8.3+:
+
 ```bash
-php artisan test
-vendor/bin/pint --dirty
+php artisan test --compact
+vendor/bin/pint --dirty --format agent
 ```
 
 ## Docs
 
 - [Architecture](docs/ARCHITECTURE.md)
+- [Production deployment](docs/PRODUCTION_DEPLOYMENT.md)
+- [Production checklist](docs/PRODUCTION_CHECKLIST.md)
 - [Roadmap](docs/ROADMAP.md)
 - [Agent Reach findings](docs/AGENT_REACH.md)

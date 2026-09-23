@@ -168,6 +168,8 @@ Unknown factors earn 0 points and stay labeled `unknown`. Scores persist on `opp
 - `QUEUE_CONNECTION=sync`
 - `CACHE_STORE=database` and `SESSION_DRIVER=database`
 - Collection is **not** scheduled unless `OPPORTUNITY_SCHEDULE_COLLECTION=true`
+- Prefer a direct daily `opportunities:collect` cron; do not also enable the scheduler for the same job
+- Long `canonical_url` values use a MySQL/MariaDB **prefix** index (768) so InnoDB utf8mb4 migrations succeed
 
 Recommended cPanel cron (direct artisan call):
 
@@ -175,13 +177,15 @@ Recommended cPanel cron (direct artisan call):
 0 6 * * * /usr/bin/php /home/USER/opportunity-hunter/artisan opportunities:collect >/dev/null 2>&1
 ```
 
-Or via the scheduler (only if the schedule flag is enabled):
+Or via the scheduler (only if the schedule flag is enabled **and** the direct collect cron is removed):
 
 ```bash
 * * * * * /usr/bin/php /home/USER/opportunity-hunter/artisan schedule:run >/dev/null 2>&1
 ```
 
 Do not introduce Redis, Supervisor, Horizon, Docker, Kubernetes, systemd, or persistent workers for collection.
+
+Full launch steps: [PRODUCTION_DEPLOYMENT.md](PRODUCTION_DEPLOYMENT.md) and [PRODUCTION_CHECKLIST.md](PRODUCTION_CHECKLIST.md).
 
 ## Intended user workflow
 

@@ -41,10 +41,19 @@ return new class extends Migration
 
         Schema::table('opportunities', function (Blueprint $table) {
             $table->string('canonical_url', 2048)->nullable()->after('source_url');
-            $table->index('canonical_url');
             $table->index('workplace');
             $table->index('location');
         });
+
+        // MySQL/MariaDB utf8mb4 cannot index the full 2048-char column (InnoDB key length).
+        // Use a prefix index there; SQLite and others can index the full column.
+        if (in_array(Schema::getConnection()->getDriverName(), ['mysql', 'mariadb'], true)) {
+            DB::statement('CREATE INDEX opportunities_canonical_url_index ON opportunities (canonical_url(768))');
+        } else {
+            Schema::table('opportunities', function (Blueprint $table) {
+                $table->index('canonical_url');
+            });
+        }
     }
 
     /**
@@ -53,7 +62,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('opportunities', function (Blueprint $table) {
-            $table->dropIndex(['canonical_url']);
+            $table->dropIndex('opportunities_canonical_url_index');
             $table->dropIndex(['workplace']);
             $table->dropIndex(['location']);
             $table->dropColumn('canonical_url');
