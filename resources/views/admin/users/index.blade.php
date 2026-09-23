@@ -3,8 +3,8 @@
 @section('title', 'Users')
 
 @section('content')
-    <h1 class="font-serif text-3xl text-pine">Users</h1>
-    <div class="mt-6 overflow-x-auto rounded-xl border border-line bg-card">
+    <h1 class="font-serif text-3xl font-bold tracking-tight text-pine">Users</h1>
+    <div class="mt-6 overflow-x-auto rounded-2xl border border-line bg-card shadow-sm shadow-ink/5">
         <table class="min-w-full text-left text-sm">
             <thead class="border-b border-line text-bark">
                 <tr>

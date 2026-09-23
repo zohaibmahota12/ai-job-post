@@ -3,10 +3,10 @@
 @section('title', 'System errors')
 
 @section('content')
-    <h1 class="font-serif text-3xl text-pine">System errors</h1>
+    <h1 class="font-serif text-3xl font-bold tracking-tight text-pine">System errors</h1>
     <div class="mt-6 space-y-3">
         @forelse ($errors as $error)
-            <article class="rounded-xl border border-line bg-card p-4">
+            <article class="rounded-2xl border border-line bg-card shadow-sm shadow-ink/5 p-4">
                 <p class="text-xs uppercase tracking-wide text-bark">{{ $error->level }} · {{ $error->occurred_at?->toDayDateTimeString() }}</p>
                 <p class="mt-2 text-sm">{{ $error->message }}</p>
                 <p class="mt-1 text-xs text-bark">{{ $error->sourceRun?->source?->name }}</p>

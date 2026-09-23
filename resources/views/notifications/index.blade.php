@@ -5,7 +5,7 @@
 @section('content')
     <div class="flex flex-wrap items-center justify-between gap-4">
         <div>
-            <h1 class="font-serif text-3xl text-pine">Notifications</h1>
+            <h1 class="font-serif text-3xl font-bold tracking-tight text-pine">Notifications</h1>
             <p class="mt-1 text-sm text-bark">{{ $unreadCount }} unread</p>
         </div>
         @if ($unreadCount > 0)
@@ -15,34 +15,37 @@
             </form>
         @endif
     </div>
-    <div class="mt-6 space-y-3">
+    <div class="mt-6 space-y-2">
         @forelse ($notifications as $notification)
             @php
                 $proposalId = data_get($notification->data, 'proposal_id');
                 $applicationId = data_get($notification->data, 'application_id');
                 $opportunityId = data_get($notification->data, 'opportunity_id');
             @endphp
-            <article class="rounded-xl border border-line bg-card p-4">
-                <p class="font-medium">{{ $notification->title }}</p>
+            <article @class([
+                'rounded-2xl border border-line bg-card p-4 shadow-sm shadow-ink/5',
+                'border-moss/30 bg-moss/5' => $notification->read_at === null,
+            ])>
+                <p class="font-semibold text-ink">{{ $notification->title }}</p>
                 @if ($notification->body)
                     <p class="mt-1 text-sm text-bark">{{ $notification->body }}</p>
                 @endif
                 <p class="mt-2 text-xs text-bark">{{ $notification->read_at ? 'Read' : 'Unread' }} · {{ $notification->created_at?->diffForHumans() }}</p>
                 <div class="mt-3 flex flex-wrap gap-3 text-sm">
                     @if ($proposalId)
-                        <a class="underline" href="{{ route('proposals.show', $proposalId) }}">Open proposal</a>
+                        <a class="font-medium text-moss underline decoration-moss/30 underline-offset-2" href="{{ route('proposals.show', $proposalId) }}">Open proposal</a>
                     @endif
                     @if ($applicationId)
-                        <a class="underline" href="{{ route('applications.edit', $applicationId) }}">Open application</a>
+                        <a class="font-medium text-moss underline decoration-moss/30 underline-offset-2" href="{{ route('applications.edit', $applicationId) }}">Open application</a>
                     @endif
                     @if ($opportunityId && ! $proposalId && ! $applicationId)
-                        <a class="underline" href="{{ route('opportunities.show', $opportunityId) }}">Open opportunity</a>
+                        <a class="font-medium text-moss underline decoration-moss/30 underline-offset-2" href="{{ route('opportunities.show', $opportunityId) }}">Open opportunity</a>
                     @endif
                     @if ($notification->read_at === null)
                         <form method="POST" action="{{ route('notifications.update', $notification) }}">
                             @csrf
                             @method('PATCH')
-                            <button type="submit" class="underline">Mark as read</button>
+                            <button type="submit" class="font-medium text-bark underline underline-offset-2 hover:text-ink">Mark as read</button>
                         </form>
                     @endif
                 </div>

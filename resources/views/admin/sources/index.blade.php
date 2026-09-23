@@ -3,7 +3,7 @@
 @section('title', 'Sources')
 
 @section('content')
-    <h1 class="font-serif text-3xl text-pine">Sources</h1>
+    <h1 class="font-serif text-3xl font-bold tracking-tight text-pine">Sources</h1>
     <p class="mt-2 max-w-2xl text-sm text-bark">Adapters plug into <code class="text-xs">php artisan opportunities:collect</code>. Enable only sources with a configured public endpoint. Agent Reach remains an optional external boundary, not the core pipeline.</p>
     <div class="mt-6 space-y-3">
         @forelse ($sources as $source)
@@ -11,7 +11,7 @@
                 $run = $latestRuns->get($source->id);
                 $health = $source->health();
             @endphp
-            <article class="rounded-xl border border-line bg-card p-4">
+            <article class="rounded-2xl border border-line bg-card shadow-sm shadow-ink/5 p-4">
                 <div class="flex flex-wrap items-start justify-between gap-3">
                     <div>
                         <div class="flex flex-wrap items-center gap-2">

@@ -3,10 +3,10 @@
 @section('title', 'Profile')
 
 @section('content')
-    <h1 class="font-serif text-3xl text-pine">Your profile</h1>
+    <h1 class="font-serif text-3xl font-bold tracking-tight text-pine">Your profile</h1>
     <p class="mt-2 max-w-2xl text-sm text-bark">These preferences belong to this account. Matching uses them later. Nothing here is shared with other users.</p>
 
-    <form method="POST" action="{{ route('profile.update') }}" class="mt-6 grid gap-4 lg:grid-cols-2">
+    <form method="POST" action="{{ route('profile.update') }}" class="mt-6 grid gap-4 rounded-2xl border border-line bg-card p-5 shadow-sm shadow-ink/5 lg:grid-cols-2">
         @csrf
         @method('PUT')
         <x-field label="Name" name="name" value="{{ old('name', $user->name) }}" required />
@@ -19,16 +19,16 @@
         </div>
         <x-field label="Years of experience" name="years_of_experience" type="number" min="0" max="80" value="{{ old('years_of_experience', $profile->years_of_experience) }}" />
         <div>
-            <label for="preferred_job_type" class="block text-sm font-medium text-bark">Preferred job type</label>
-            <select id="preferred_job_type" name="preferred_job_type" class="mt-1 w-full rounded-md border border-line bg-white px-3 py-2">
+            <label for="preferred_job_type" class="block text-sm font-medium text-ink">Preferred job type</label>
+            <select id="preferred_job_type" name="preferred_job_type" class="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm outline-none transition focus:border-moss focus:ring-2 focus:ring-moss/20">
                 @foreach (\App\JobType::options() as $value => $label)
                     <option value="{{ $value }}" @selected(old('preferred_job_type', $profile->preferred_job_type?->value) === $value)>{{ $label }}</option>
                 @endforeach
             </select>
         </div>
         <div>
-            <label for="remote_preference" class="block text-sm font-medium text-bark">Remote preference</label>
-            <select id="remote_preference" name="remote_preference" class="mt-1 w-full rounded-md border border-line bg-white px-3 py-2">
+            <label for="remote_preference" class="block text-sm font-medium text-ink">Remote preference</label>
+            <select id="remote_preference" name="remote_preference" class="mt-1.5 w-full rounded-lg border border-line bg-white px-3 py-2.5 text-sm outline-none transition focus:border-moss focus:ring-2 focus:ring-moss/20">
                 @foreach (\App\RemotePreference::options() as $value => $label)
                     <option value="{{ $value }}" @selected(old('remote_preference', $profile->remote_preference?->value) === $value)>{{ $label }}</option>
                 @endforeach
@@ -44,16 +44,16 @@
     </form>
 
     <section class="mt-10">
-        <h2 class="font-serif text-2xl text-pine">Skills</h2>
+        <h2 class="text-sm font-semibold tracking-wide text-ink uppercase">Skills</h2>
         <p class="mt-1 text-sm text-bark">Skills are shared names, not a fixed catalog. Add the ones you want this account matched against.</p>
         <ul class="mt-4 flex flex-wrap gap-2">
             @forelse ($user->skills as $skill)
-                <li class="flex items-center gap-2 rounded-full bg-sand px-3 py-1 text-sm">
+                <li class="flex items-center gap-2 rounded-md bg-sand px-3 py-1.5 text-sm font-medium text-ink">
                     {{ $skill->name }}
                     <form method="POST" action="{{ route('profile.skills.destroy', $skill) }}">
                         @csrf
                         @method('DELETE')
-                        <button class="text-clay" type="submit">Remove</button>
+                        <button class="text-clay hover:underline" type="submit">Remove</button>
                     </form>
                 </li>
             @empty

@@ -4,15 +4,55 @@
 @source '../../storage/framework/views/*.php';
 
 @theme {
-    --font-sans: 'Outfit', 'Instrument Sans', ui-sans-serif, system-ui, sans-serif;
-    --font-serif: 'Fraunces', ui-serif, Georgia, serif;
-    --color-paper: #f3efe4;
-    --color-ink: #1c1915;
-    --color-bark: #4a3f36;
-    --color-line: #e4d9c6;
-    --color-card: #fffdf8;
-    --color-pine: #1b3330;
-    --color-moss: #2f6b5d;
-    --color-clay: #a33b24;
-    --color-sand: #efe6d6;
+    --font-sans: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
+    --font-serif: 'Syne', ui-sans-serif, system-ui, sans-serif;
+    --color-paper: #f5f7fa;
+    --color-ink: #0f172a;
+    --color-bark: #64748b;
+    --color-line: #e2e8f0;
+    --color-card: #ffffff;
+    --color-pine: #0b1f2a;
+    --color-moss: #0d9488;
+    --color-clay: #dc2626;
+    --color-sand: #eef2f6;
+}
+
+@layer base {
+    ::selection {
+        background-color: color-mix(in oklab, var(--color-moss) 28%, white);
+    }
+}
+
+@layer utilities {
+    .animate-rise {
+        animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    .animate-rise-delay {
+        animation: rise 0.7s cubic-bezier(0.22, 1, 0.36, 1) 0.12s both;
+    }
+
+    .animate-fade {
+        animation: fade 0.8s ease both;
+    }
+}
+
+@keyframes rise {
+    from {
+        opacity: 0;
+        transform: translateY(14px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes fade {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
 }

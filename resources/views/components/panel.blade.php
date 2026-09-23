@@ -1,8 +1,8 @@
 @props(['title' => null])
 
-<section {{ $attributes->merge(['class' => 'rounded-xl border border-line bg-card p-5']) }}>
+<section {{ $attributes->merge(['class' => 'rounded-2xl border border-line bg-card p-5 shadow-sm shadow-ink/5']) }}>
     @if ($title)
-        <h2 class="font-serif text-xl text-pine">{{ $title }}</h2>
+        <h2 class="text-sm font-semibold tracking-wide text-ink uppercase">{{ $title }}</h2>
     @endif
-    <div @class(['mt-3' => $title])>{{ $slot }}</div>
+    <div @class(['mt-4' => $title])>{{ $slot }}</div>
 </section>

@@ -3,7 +3,7 @@
 @section('title', 'Create account')
 
 @section('content')
-    <h1 class="font-serif text-3xl text-pine">Create your account</h1>
+    <h1 class="font-serif text-3xl font-bold tracking-tight text-pine">Create your account</h1>
     <p class="mt-2 text-sm text-bark">Your skills and matches stay private to this account.</p>
     <form method="POST" action="{{ route('register') }}" class="mt-6 space-y-4">
         @csrf
